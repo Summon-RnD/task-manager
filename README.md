@@ -48,29 +48,34 @@ npm run test:watch
 | Workflow | Trigger | What it does |
 |----------|---------|--------------|
 | [CI](.github/workflows/ci.yml) | PR + push to `main` | `npm test`, syntax check, entrypoint verification |
-| [PR Preview](.github/workflows/preview.yml) | Pull requests | Tests, deploys preview to Pages, comments URL on the PR |
-| [CD](.github/workflows/deploy.yml) | Push to `main` | Tests, deploys production site to `gh-pages` |
+| [PR Preview](.github/workflows/preview.yml) | Pull requests | Tests, uploads UI artifact, comments how to preview locally |
+| [CD](.github/workflows/deploy.yml) | Push to `main` | Optional Pages deploy if `ENABLE_GITHUB_PAGES=true` |
 
-### One-time setup (after making the repo public)
+### GitHub Pages blocked by your organization?
 
-1. **Settings → Pages → Build and deployment → Source:** `Deploy from a branch`
-2. **Branch:** `gh-pages` / `/ (root)`
-3. **Settings → Actions → General → Workflow permissions:** `Read and write permissions`
+If Settings → Pages shows *"Pages on this repository are disabled. Please contact your organization administrators"*, that is an **org policy**. Making the repo public does not override it. You cannot enable Pages yourself.
+
+**Ask an org admin** to allow GitHub Pages for the organization (Organization settings → Policies / Member privileges → Pages).
+
+Until then, preview the UI locally or from the PR artifact (see below).
 
 ### See the UI on a pull request
-
-After checks pass, a bot comment on the PR includes a link like:
-
-`https://summon-rnd.github.io/task-manager/pr-preview/pr-<number>/`
-
-### Production URL (after merge to `main`)
-
-`https://summon-rnd.github.io/task-manager/`
-
-### Local preview
 
 ```bash
 gh pr checkout <PR_NUMBER>
 npm install
 npx --yes serve .
 ```
+
+Or download artifact `pr-<number>-ui` from the **PR Preview** workflow run on the Actions tab.
+
+The PR bot comment repeats these steps after checks pass.
+
+### Hosted URLs (after org enables Pages)
+
+1. Org admin enables Pages for the organization
+2. Set repository variable **`ENABLE_GITHUB_PAGES=true`** (Settings → Secrets and variables → Actions → Variables)
+3. **Settings → Pages → Deploy from branch → `gh-pages` / root**
+4. **Settings → Actions → Read and write permissions**
+
+Then PR previews can use `gh-pages` deploy workflows and production will be at `https://<org>.github.io/<repo>/`.
