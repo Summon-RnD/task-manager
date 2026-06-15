@@ -1,9 +1,10 @@
 import {
-  PEOPLE, TODAY, HARDWARE_VOCAB, CLIENTS,
+  PEOPLE, TODAY, HARDWARE_VOCAB, CLIENTS, DATA,
   SIZE_PTS, SIZE_NAMES, LEAD, ZOOMS, GBAR_H,
   R0G, R1G, SPAN_G, TODAY_PX,
   C_LATE, C_TODAY, C_RADAR, C_LATER, C_DONE,
 } from "../data/constants.js";
+import { applyBoard, boardPayload } from "../data/board-store.js";
 import { inferOwnerByDomain, canonHardware, findClient, buildRespMapText, buildVocabText, norm as _norm } from "../lib/domain.js";
 import {
   createTaskFactory, flat, findPath as findPathIn, counts, pct, taskDone,
@@ -14,92 +15,14 @@ import {
   cap1, stripCaptions, findOwnerId, findDue, findSize,
   normalizeProposal, mockTranscript, isoCap,
 } from "../lib/capture.js";
+import { initApp, scheduleSave } from "../lib/persistence.js";
 
 /* ================= sample data ================= */
 /* al = ASR aliases: common Whisper mishearings of each name.
    In production this mapping is done by the extraction LLM given the roster,
    plus Whisper initial_prompt biasing ("Team: Jean, Florian, Iannis, …"). */
-const RESP_MAP_TEXT = buildRespMapText();
-const VOCAB_TEXT = buildVocabText();
 
-const { T } = createTaskFactory();
-
-const DATA = [
-  /* ---- Client pilot: Derichebourg (waste-sorting robot) ---- */
-  T("Derichebourg pilot — sorting robot","ia",{p:"high",d:"2026-07-10",open:true,c:[
-    T("Integrate RS03 drive motors","sk",{p:"high",d:"2026-06-16",s:"l",open:true,c:[
-      T("Mount RS03 motors and couplers","sk",{done:true,d:"2026-06-08",s:"m"}),
-      T("Wire motor CAN bus to controller","sk",{d:"2026-06-14",s:"m"}),
-      T("Calibrate RS03 torque limits","sk",{d:"2026-06-17",s:"s"}),
-    ]}),
-    T("Tune obstacle avoidance for the sorting line","ak",{p:"high",d:"2026-06-19",s:"l",open:true,c:[
-      T("Collect depth data along the conveyor","ak",{done:true,d:"2026-06-10",s:"m"}),
-      T("Train avoidance model","ak",{d:"2026-06-18",s:"l"}),
-      T("Field test near the conveyor","ak",{d:"2026-06-22",s:"m"}),
-    ]}),
-    T("Fix D-Wave board brownout under load","ly",{p:"high",d:"2026-06-12",s:"m",open:true,c:[
-      T("Diagnose the power regulator","ly",{done:true,d:"2026-06-11",s:"s"}),
-      T("Replace regulator and retest","ly",{d:"2026-06-13",s:"m"}),
-    ]}),
-    T("Approve motor procurement budget","jn",{d:"2026-06-15",s:"s"}),
-    T("Coordinate on-site pilot install","fd",{d:"2026-06-30",s:"l"}),
-  ]}),
-
-  /* ---- Client pilot: JCDecaux (billboard-servicing robot) ---- */
-  T("JCDecaux pilot — billboard servicing","ak",{p:"high",d:"2026-07-20",open:true,c:[
-    T("Design board-mount manipulator arm","ia",{d:"2026-06-23",s:"l",open:true,c:[
-      T("CAD the arm linkage","ia",{d:"2026-06-18",s:"m"}),
-      T("Source Feetech servos for the arm","lm",{d:"2026-06-20",s:"s"}),
-    ]}),
-    T("Autonomous navigation between billboards","ak",{p:"high",d:"2026-06-26",s:"xl",open:true,c:[
-      T("Build city route planner","ak",{d:"2026-06-24",s:"l"}),
-      T("GPS waypoint following","ak",{d:"2026-06-25",s:"m"}),
-    ]}),
-    T("Hub-motor sizing for outdoor terrain","sk",{d:"2026-06-20",s:"m"}),
-    T("Demo prep for JCDecaux","fd",{d:"2026-06-27",s:"s"}),
-  ]}),
-
-  /* ---- Client pilot: Onet (floor-cleaning autonomy) ---- */
-  T("Onet pilot — floor-cleaning autonomy","ak",{d:"2026-08-01",open:true,c:[
-    T("Map the Onet facility floorplan","ak",{d:"2026-06-21",s:"m"}),
-    T("Integrate Feetech servos for the brush arm","sk",{d:"2026-06-24",s:"m",open:true,c:[
-      T("Mount the brush assembly","lm",{d:"2026-06-22",s:"s"}),
-      T("Tune servo sweep pattern","sk",{d:"2026-06-25",s:"s"}),
-    ]}),
-    T("Safety e-stop wiring","ly",{p:"high",d:"2026-06-16",s:"s"}),
-  ]}),
-
-  /* ---- Internal R&D: core platform ---- */
-  T("RoboOS v2 — core platform","ia",{p:"high",d:"2026-07-31",open:true,c:[
-    T("Migrate OS to RS04 motor drivers","sk",{p:"high",d:"2026-06-24",s:"l",open:true,c:[
-      T("Port CAN driver to RS04","sk",{d:"2026-06-22",s:"m"}),
-      T("Bench-test RS04 closed loop","sk",{d:"2026-06-23",s:"m"}),
-    ]}),
-    T("Real-time locomotion controller","ak",{d:"2026-06-29",s:"l"}),
-    T("Evaluate EL05 actuators","sk",{d:"2026-06-17",s:"m",open:true,c:[
-      T("Run EL05 load tests","sk",{done:true,d:"2026-06-09",s:"s"}),
-      T("Compare EL05 vs RS02 efficiency","sk",{d:"2026-06-18",s:"s"}),
-    ]}),
-    T("Nightly build + hardware-in-the-loop rig","ia",{d:"2026-06-21",s:"m"}),
-    T("Assemble robot chassis v2","ia",{d:"2026-07-06",s:"l"}),
-  ]}),
-
-  /* ---- Client pilot: NSI (inventory-scanning robot) ---- */
-  T("NSI pilot — inventory scanning","ia",{d:"2026-07-15",open:true,c:[
-    T("Scoping follow-up with NSI","fd",{d:"2026-06-19",s:"s"}),
-    T("Barcode scanner integration","sk",{d:"2026-06-28",s:"m"}),
-    T("Aisle navigation tuning","ak",{d:"2026-07-02",s:"m"}),
-  ]}),
-];
-
-/* subtasks inherit their parent task's owner by default — with an occasional
-   (seeded-random) different owner sprinkled in, like a real team would have */
-{ let seed=7; const rnd=()=>(seed=(seed*1103515245+12345)%2147483648)/2147483648;
-  const keys=Object.keys(PEOPLE);
-  const walk=(nodes,parent,depth)=>nodes.forEach(n=>{
-    if(depth>=2&&parent) n.owner=rnd()<0.7?parent.owner:keys[Math.floor(rnd()*keys.length)];
-    walk(n.children,n,depth+1); });
-  walk(DATA,null,0); }
+const { T, setUid, getUid } = createTaskFactory();
 
 const findPath = (id, nodes = DATA, path = []) => findPathIn(id, nodes, path);
 const depthOf = (id) => depthOfIn(id, DATA);
@@ -121,10 +44,11 @@ const GRIP_SVG='<svg width="11" height="17" viewBox="0 0 11 17" fill="currentCol
 
 /* ================= undo (ctrl/cmd+Z) ================= */
 const UNDO=[];
-function snap(){ UNDO.push(JSON.stringify(DATA)); if(UNDO.length>60) UNDO.shift(); }
+let requestSave = () => {};
+function snap(){ UNDO.push(JSON.stringify(DATA)); if(UNDO.length>60) UNDO.shift(); requestSave(); }
 function undo(){ if(!UNDO.length) return;
   DATA.splice(0,DATA.length,...JSON.parse(UNDO.pop()));
-  closeSheet(); ding(0); renderAll(); }
+  closeSheet(); ding(0); renderAll(); requestSave(); }
 document.addEventListener("keydown",e=>{
   if(e.key==="Escape"){ closeSheet(); closeCapture(); closeTeam(); closeBarMenu(); closeTranscript(); closeReview(); hideTip(); return; }
   if((e.ctrlKey||e.metaKey)&&!e.shiftKey&&e.key.toLowerCase()==="z"){
@@ -1083,10 +1007,10 @@ Rules:
 - Task titles are concise imperative phrases with NO leading article — "Clean the bathroom", not "a clean the bathroom". Each item has title, plus owner/due/size if stated (else null), plus a "subs" array (empty if none).
 - SUBTASKS: the word "subtask" ALWAYS means an item inside some existing task's "subs" array — NEVER a new top-level task, no matter how many are added. When the user says "add subtask(s)" / "add N subtasks": if they name or imply a parent ("for the first task", "under clean the bathroom"), use it; if they DON'T name one, attach the subtasks to the LAST task currently in the tasks array. Return that task's complete subs list. Subtasks are leaves (no further subs). Never increase the number of top-level tasks when the user said "subtask".
 - ASSIGNEE INFERENCE: when no owner is explicitly named for a task/subtask, look at the task's CONTENT and assign the teammate whose responsibility best matches it, using this RESPONSIBILITY MAP:
-${RESP_MAP_TEXT}
+${buildRespMapText()}
   Examples: "Install RS03 motor on prototype" → Iannis or Sanket; "Implement obstacle avoidance for the Derichebourg pilot" → Akshat; "Fix D-Wave board power issue" → Leynaïck. Only when nothing in the content maps to a responsibility, fall back to the PROJECT's owner. If the user says "owners same as the project", set every task's and subtask's owner to the project owner (this overrides inference).
 - DOMAIN VOCABULARY — use these EXACT spellings; never invent or mis-spell hardware or client names:
-${VOCAB_TEXT}
+${buildVocabText()}
   Map mis-heard variants to the canonical form (e.g. "RS zero three"/"RS-3" → "RS03", "dwave" → "D-Wave", "jaycee decaux" → "JCDecaux").
 - When the user gives an ordered list of due dates/owners "in that order" for the tasks, apply them positionally to the tasks in their current order.
 - DELETING: you CAN delete. When the user asks to remove/delete a task or subtask (e.g. "delete the two tests you just added", "remove clean the toilet"), put each item's exact current title into the "remove" array. Otherwise "remove" is []. Never say you can't delete.
@@ -1366,8 +1290,8 @@ LANGUAGE: the transcript may be English or French — ALL OUTPUT MUST BE IN ENGL
 - Group work into projects. A customer pilot becomes a project; set its "client" to the matching known client. Pure internal work has client=null.
 - Each task: a concise imperative title (no leading article), owner, due (YYYY-MM-DD resolved from context.today, else null), size (s/m/l/xl or null), client (if the task is for a known client else null), and a subs array (usually empty).
 - ASSIGNEE: infer each owner from this RESPONSIBILITY MAP using the task's content; only null if genuinely unclear:
-${RESP_MAP_TEXT}
-${VOCAB_TEXT}
+${buildRespMapText()}
+${buildVocabText()}
   Use the exact hardware/client spellings above; map mis-hearings to the canonical form.
 - Do NOT re-create work that already exists in context.projects — only return genuinely new items.
 - assistantSay: one short sentence, e.g. "I identified 2 projects and 7 tasks from this conversation."
@@ -1512,9 +1436,9 @@ function renderTeam(){
     ${p.photo?`<button class="tbtn tdel" onclick="removePhoto('${k}')">Remove</button>`:""}</div>`).join("");
 }
 function uploadPhoto(k,input){ const f=input.files&&input.files[0]; if(!f) return;
-  const r=new FileReader(); r.onload=e=>{ PEOPLE[k].photo=e.target.result; renderTeam(); renderAll(); };
+  const r=new FileReader(); r.onload=e=>{ PEOPLE[k].photo=e.target.result; renderTeam(); renderAll(); requestSave(); };
   r.readAsDataURL(f); }
-function removePhoto(k){ delete PEOPLE[k].photo; renderTeam(); renderAll(); }
+function removePhoto(k){ delete PEOPLE[k].photo; renderTeam(); renderAll(); requestSave(); }
 
 /* ================= search ================= */
 function doSearch(){
@@ -1585,7 +1509,11 @@ function renderAll(){ renderFilter(); renderDash();
 }
 Object.defineProperty(window, "CAP", { get: () => CAP, configurable: true });
 
-renderAll();
+requestSave = await initApp({
+  applyBoard: (b) => applyBoard(b, setUid),
+  boardPayload: () => boardPayload(getUid),
+  renderAll,
+});
 
 const _globals = {
   toggleSearch, openTeam, micFabTap, openTranscript, toggleSettings, toggleSidebar, closeSettings,

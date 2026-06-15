@@ -1,5 +1,24 @@
 # Changelog
 
+## SQLite persistence (2026-06-15)
+
+### Added
+- `server.py` - Flask app on port 8090 serving `index.html` and `/api/board`
+- `db.py` - SQLite storage in `data/taskboard.db`
+- `seed_data.py` - default team/tasks seeded on first run
+- `requirements.txt` - Flask dependency
+- `src/data/board-store.js` - mutable board state loaded from API
+- `src/lib/persistence.js` - debounced auto-save (500ms) after edits
+
+### Changed
+- `src/app/main.js` - loads board on startup, saves after mutations
+- `index.html` unchanged as ES module entry (logic stays in `src/`)
+
+### Reasoning
+- Single JSON blob in SQLite keeps v1 simple and matches the in-memory tree model
+- Debounced PUT after `snap()` covers all task mutations without touching every handler
+- Python fits the existing port-8090 hosting setup
+
 ## Testing infrastructure (2026-06-15)
 
 ### Added
