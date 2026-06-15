@@ -45,27 +45,15 @@ npm run test:watch
 
 ## CI/CD
 
-GitHub Actions runs on every push and pull request to `main`:
-
 | Workflow | Trigger | What it does |
 |----------|---------|--------------|
 | [CI](.github/workflows/ci.yml) | PR + push to `main` | `npm test`, syntax check, entrypoint verification |
-| [PR Preview](.github/workflows/preview.yml) | Pull requests | Tests, deploys preview, comments URL on the PR |
-| [CD](.github/workflows/deploy.yml) | Push to `main` | Tests, deploys production site to `gh-pages` |
+| [PR Preview](.github/workflows/preview.yml) | Pull requests | Tests, uploads UI artifact, posts local preview steps on the PR |
+| [CD](.github/workflows/deploy.yml) | Push to `main` | Optional: deploy to `gh-pages` if `ENABLE_GITHUB_PAGES=true` |
 
-### See the UI on a pull request
+### See the UI on a pull request (private repo)
 
-**Online preview (recommended)**
-
-1. One-time repo setup (maintainer):
-   - **Settings → Pages → Build and deployment → Source:** `Deploy from a branch`
-   - **Branch:** `gh-pages` / `/ (root)`
-   - **Settings → Actions → General → Workflow permissions:** `Read and write permissions`
-2. Open the PR. After checks pass, a bot comment appears with a link like:
-   `https://<org>.github.io/<repo>/pr-preview/pr-<number>/`
-3. Click that link to use the TaskBoard UI for that branch.
-
-**Local preview**
+GitHub Pages does **not** work on free private repositories. Use local preview:
 
 ```bash
 gh pr checkout <PR_NUMBER>
@@ -73,10 +61,18 @@ npm install
 npx --yes serve .
 ```
 
-Then open `http://localhost:3000` (or the port `serve` prints).
+Open the URL `serve` prints (usually `http://localhost:3000`).
 
-### Production URL (after merge to `main`)
+Each PR also gets a **UI artifact** (`pr-<number>-ui`) on the PR Preview workflow run if you prefer to download the built files.
 
-`https://<org>.github.io/<repo>/`
+The PR bot comment repeats these steps after checks pass.
 
-For this repo: `https://summon-rnd.github.io/task-manager/` once Pages is enabled.
+### Optional: hosted Pages (paid GitHub plan only)
+
+If you have GitHub Team or Enterprise:
+
+1. Set repository variable **`ENABLE_GITHUB_PAGES=true`** (Settings → Secrets and variables → Actions → Variables)
+2. **Settings → Pages → Deploy from branch → `gh-pages` / root**
+3. **Settings → Actions → Workflow permissions → Read and write**
+
+Production URL would then be `https://<org>.github.io/<repo>/` (visibility follows your Pages access settings).

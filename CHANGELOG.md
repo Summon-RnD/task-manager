@@ -12,21 +12,12 @@
 
 ### PR previews (2026-06-15)
 
-### Added
-- `preview.yml`: deploys each PR to `gh-pages/pr-preview/pr-<number>/` and posts the preview URL on the PR.
-- Switched production CD to deploy to the `gh-pages` branch (same branch PR previews use).
-- Preview workflow does not wait on Pages API (avoids failure before Pages is enabled).
-
 ### Changed
-- Production CD no longer uses the GitHub Actions Pages artifact flow; both previews and production now use the `gh-pages` branch.
-
-### Setup required
-- Pages source must be **Deploy from branch → gh-pages → / (root)**.
-- Workflow permissions must allow **read and write**.
+- Private repo: PR preview now uploads a UI artifact and comments with local `serve` steps (no public Pages URL).
+- CD deploy is opt-in via repo variable `ENABLE_GITHUB_PAGES=true` (Team/Enterprise only).
 
 ### Reasoning
-- GitHub Actions-based Pages deploy does not support per-PR preview URLs.
-- `rossjrw/pr-preview-action` posts a clickable preview link on each PR for UI review before merge.
+- GitHub Pages is not available for free private repositories, so gh-pages deploy links would not work for reviewers.
 
 - The prototype was a single 1700+ line inline script with no automated checks.
 - Pulling testable logic into modules gives a stable base for refactors and new features without changing UI behavior.

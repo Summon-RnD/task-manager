@@ -6,10 +6,9 @@ on:
       - opened
       - reopened
       - synchronize
-      - closed
 
 permissions:
-  contents: write
+  contents: read
   pull-requests: write
 
 concurrency:
@@ -18,39 +17,62 @@ concurrency:
 
 jobs:
   preview:
-    name: Deploy PR preview
+    name: Build UI preview
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Node.js
-        if: github.event.action != 'closed'
         uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: npm
 
       - name: Install dependencies
-        if: github.event.action != 'closed'
         run: npm ci
 
       - name: Run unit tests
-        if: github.event.action != 'closed'
         run: npm test
 
       - name: Prepare static site
-        if: github.event.action != 'closed'
         run: |
           mkdir -p _site
           cp index.html _site/
           cp -r src _site/
           touch _site/.nojekyll
 
-      - name: Deploy preview
-        uses: rossjrw/pr-preview-action@v1
+      - name: Upload UI artifact
+        uses: actions/upload-artifact@v4
         with:
-          source-dir: ./_site
-          preview-branch: gh-pages
-          qr-code: true
-          wait-for-pages-deployment: false
+          name: pr-${{ github.event.pull_request.number }}-ui
+          path: _site
+          retention-days: 14
+
+      - name: Comment preview instructions
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: ui-preview
+          message: |
+            ## UI preview (private repo)
+
+            This repo is private, so there is no public GitHub Pages URL. Use one of these:
+
+            ### Option A - local (recommended)
+
+            ```bash
+            gh pr checkout ${{ github.event.pull_request.number }}
+            npm install
+            npx --yes serve .
+            ```
+
+            Open the URL `serve` prints (usually `http://localhost:3000`).
+
+            ### Option B - download build
+
+            1. Open the **PR Preview** workflow run for this commit
+            2. Download artifact **`pr-${{ github.event.pull_request.number }}-ui`**
+            3. Run `npx --yes serve <path-to-folder>`
+
+            ---
+            To enable hosted Pages (GitHub Team/Enterprise only), set repo variable `ENABLE_GITHUB_PAGES=true` and configure Pages from the `gh-pages` branch.
