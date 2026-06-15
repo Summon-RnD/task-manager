@@ -10,14 +10,22 @@
 - GitHub Actions workflow (`.github/workflows/ci.yml`) to run tests on push and PR.
 - GitHub Actions CD workflow (`.github/workflows/deploy.yml`) to deploy the static app to GitHub Pages after tests pass on `main`.
 
-## CI/CD (2026-06-15)
+### PR previews (2026-06-15)
 
 ### Added
-- Expanded CI: syntax check, static entrypoint verification, `npm run ci` script.
-- CD pipeline: tests on `main`, then GitHub Pages deploy of `index.html` and `src/`.
+- `preview.yml`: deploys each PR to `gh-pages/pr-preview/pr-<number>/` and posts the preview URL on the PR.
+- Switched production CD to deploy to the `gh-pages` branch (same branch PR previews use).
+
+### Changed
+- Production CD no longer uses the GitHub Actions Pages artifact flow; both previews and production now use the `gh-pages` branch.
+
+### Setup required
+- Pages source must be **Deploy from branch → gh-pages → / (root)**.
+- Workflow permissions must allow **read and write**.
 
 ### Reasoning
-- PRs need automated gates; `main` additionally gets a hosted preview once Pages is enabled in repo settings.
+- GitHub Actions-based Pages deploy does not support per-PR preview URLs.
+- `rossjrw/pr-preview-action` posts a clickable preview link on each PR for UI review before merge.
 
 - The prototype was a single 1700+ line inline script with no automated checks.
 - Pulling testable logic into modules gives a stable base for refactors and new features without changing UI behavior.
