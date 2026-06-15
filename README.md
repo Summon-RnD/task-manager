@@ -39,6 +39,17 @@ npm run test:watch
 
 ## Before opening a PR
 
-1. Run `npm test` and confirm all tests pass.
+1. Run `npm run ci` and confirm all checks pass.
 2. Smoke-check the UI in a browser (filter, gantt, task detail sheet).
 3. Update `CHANGELOG.md` if you change behavior.
+
+## CI/CD
+
+GitHub Actions runs on every push and pull request to `main`:
+
+| Workflow | Trigger | What it does |
+|----------|---------|--------------|
+| [CI](.github/workflows/ci.yml) | PR + push to `main` | `npm test`, syntax check, entrypoint verification |
+| [CD](.github/workflows/deploy.yml) | Push to `main` | Runs tests, then deploys `index.html` + `src/` to GitHub Pages |
+
+To enable the live demo after merge, turn on **GitHub Pages** in repo settings and set the source to **GitHub Actions**.
