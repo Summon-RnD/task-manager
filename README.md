@@ -48,31 +48,29 @@ npm run test:watch
 | Workflow | Trigger | What it does |
 |----------|---------|--------------|
 | [CI](.github/workflows/ci.yml) | PR + push to `main` | `npm test`, syntax check, entrypoint verification |
-| [PR Preview](.github/workflows/preview.yml) | Pull requests | Tests, uploads UI artifact, posts local preview steps on the PR |
-| [CD](.github/workflows/deploy.yml) | Push to `main` | Optional: deploy to `gh-pages` if `ENABLE_GITHUB_PAGES=true` |
+| [PR Preview](.github/workflows/preview.yml) | Pull requests | Tests, deploys preview to Pages, comments URL on the PR |
+| [CD](.github/workflows/deploy.yml) | Push to `main` | Tests, deploys production site to `gh-pages` |
 
-### See the UI on a pull request (private repo)
+### One-time setup (after making the repo public)
 
-GitHub Pages does **not** work on free private repositories. Use local preview:
+1. **Settings → Pages → Build and deployment → Source:** `Deploy from a branch`
+2. **Branch:** `gh-pages` / `/ (root)`
+3. **Settings → Actions → General → Workflow permissions:** `Read and write permissions`
+
+### See the UI on a pull request
+
+After checks pass, a bot comment on the PR includes a link like:
+
+`https://summon-rnd.github.io/task-manager/pr-preview/pr-<number>/`
+
+### Production URL (after merge to `main`)
+
+`https://summon-rnd.github.io/task-manager/`
+
+### Local preview
 
 ```bash
 gh pr checkout <PR_NUMBER>
 npm install
 npx --yes serve .
 ```
-
-Open the URL `serve` prints (usually `http://localhost:3000`).
-
-Each PR also gets a **UI artifact** (`pr-<number>-ui`) on the PR Preview workflow run if you prefer to download the built files.
-
-The PR bot comment repeats these steps after checks pass.
-
-### Optional: hosted Pages (paid GitHub plan only)
-
-If you have GitHub Team or Enterprise:
-
-1. Set repository variable **`ENABLE_GITHUB_PAGES=true`** (Settings → Secrets and variables → Actions → Variables)
-2. **Settings → Pages → Deploy from branch → `gh-pages` / root**
-3. **Settings → Actions → Workflow permissions → Read and write**
-
-Production URL would then be `https://<org>.github.io/<repo>/` (visibility follows your Pages access settings).
