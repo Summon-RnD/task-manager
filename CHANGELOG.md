@@ -19,6 +19,10 @@
 - Debounced PUT after `snap()` covers all task mutations without touching every handler
 - Python fits the existing port-8090 hosting setup
 
+### Fixed
+- `seed_data.py` nested `make()` was re-processing already-built child nodes, stripping due/size/children
+- `board-sync.js` now rejects corrupt server boards so inline sample data is kept
+
 ## Testing infrastructure (2026-06-15)
 
 ### Added

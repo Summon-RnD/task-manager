@@ -25,6 +25,16 @@ export function applyBoard(board, data, setUid) {
   if (!board || typeof board !== "object") return false;
   if (!board.tasks?.length || !Object.keys(board.people || {}).length) return false;
 
+  let leaves = 0;
+  let withDue = 0;
+  flat(board.tasks, (n) => {
+    if (!n.children?.length) {
+      leaves += 1;
+      if (n.due) withDue += 1;
+    }
+  });
+  if (!leaves || withDue < leaves * 0.3) return false;
+
   Object.keys(PEOPLE).forEach((k) => delete PEOPLE[k]);
   Object.assign(PEOPLE, board.people);
 
