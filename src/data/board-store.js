@@ -50,19 +50,19 @@ export function boardPayload(getUid) {
   };
 }
 
-export function initBoardDefaults(setUid) {
-  applyBoard(
-    {
-      people: structuredClone(DEFAULT_PEOPLE),
-      tasks: [],
-      clients: structuredClone(DEFAULT_CLIENTS),
-      hardware_vocab: [...DEFAULT_HARDWARE_VOCAB],
-      domain_rules: structuredClone(DEFAULT_DOMAIN_RULES),
-      uid: 0,
-      today: DEFAULT_TODAY,
-    },
-    setUid,
-  );
+export function initBoardDefaults(setUid, buildTasks) {
+  Object.keys(PEOPLE).forEach((k) => delete PEOPLE[k]);
+  Object.assign(PEOPLE, structuredClone(DEFAULT_PEOPLE));
+  CLIENTS.splice(0, CLIENTS.length, ...structuredClone(DEFAULT_CLIENTS));
+  HARDWARE_VOCAB.splice(0, HARDWARE_VOCAB.length, ...DEFAULT_HARDWARE_VOCAB);
+  DOMAIN_RULES.splice(0, DOMAIN_RULES.length, ...structuredClone(DEFAULT_DOMAIN_RULES));
+  TODAY = new Date(DEFAULT_TODAY);
+
+  const tasks = buildTasks ? buildTasks() : [];
+  DATA.splice(0, DATA.length, ...tasks);
+
+  const uid = maxTaskId(DATA);
+  if (setUid) setUid(uid);
 }
 
 initBoardDefaults();

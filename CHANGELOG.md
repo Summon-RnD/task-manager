@@ -13,6 +13,8 @@
 ### Changed
 - `src/app/main.js` - loads board on startup, saves after mutations
 - `index.html` unchanged as ES module entry (logic stays in `src/`)
+- Restored sample task data as offline fallback (GitHub Pages / static serve)
+- Removed error banner when local sample data is used
 
 ### Reasoning
 - Single JSON blob in SQLite keeps v1 simple and matches the in-memory tree model

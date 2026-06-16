@@ -40,18 +40,16 @@ export async function saveBoard(boardPayload) {
 
 export async function initApp({ applyBoard, boardPayload, renderAll }) {
   const doSave = () => saveBoard(boardPayload);
+  let useServer = false;
   try {
     const res = await fetch("/api/board");
     if (!res.ok) throw new Error("load failed");
     applyBoard(await res.json());
+    useServer = true;
   } catch (e) {
-    console.error("Board load failed - is server.py running on port 8090?", e);
-    document.body.insertAdjacentHTML(
-      "afterbegin",
-      '<div style="background:#fde8e6;color:#a12;padding:10px 16px;font-size:14px">Could not load board data. Start the server with: python server.py</div>',
-    );
+    console.warn("Board load skipped, using local sample data.", e);
   }
-  boardReady = true;
+  boardReady = useServer;
   renderAll();
   return () => scheduleSave(doSave);
 }
