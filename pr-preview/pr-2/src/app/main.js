@@ -4,7 +4,8 @@ import {
   R0G, R1G, SPAN_G, TODAY_PX,
   C_LATE, C_TODAY, C_RADAR, C_LATER, C_DONE,
 } from "../data/constants.js";
-import { applyBoard, boardPayload } from "../data/board-store.js";
+import { applyBoard, boardPayload, initBoardDefaults } from "../data/board-store.js";
+import { buildSampleTasks } from "../data/sample-tasks.js";
 import { inferOwnerByDomain, canonHardware, findClient, buildRespMapText, buildVocabText, norm as _norm } from "../lib/domain.js";
 import {
   createTaskFactory, flat, findPath as findPathIn, counts, pct, taskDone,
@@ -23,6 +24,7 @@ import { initApp, scheduleSave } from "../lib/persistence.js";
    plus Whisper initial_prompt biasing ("Team: Jean, Florian, Iannis, …"). */
 
 const { T, setUid, getUid } = createTaskFactory();
+initBoardDefaults(setUid, () => buildSampleTasks(T));
 
 const findPath = (id, nodes = DATA, path = []) => findPathIn(id, nodes, path);
 const depthOf = (id) => depthOfIn(id, DATA);
