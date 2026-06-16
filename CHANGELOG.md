@@ -1,5 +1,28 @@
 # Changelog
 
+## SQLite persistence (2026-06-15)
+
+### Added
+- `server.py` - Flask app on port 8090 serving `index.html` and `/api/board`
+- `db.py` - SQLite storage in `data/taskboard.db`
+- `seed_data.py` - default team/tasks seeded on first run
+- `requirements.txt` - Flask dependency
+- `src/lib/board-sync.js` - background load/save (500ms debounce after edits)
+
+### Changed
+- `src/app/main.js` - restored main-branch UI boot (sync `renderAll()`), persistence loads in background
+- `src/lib/board-sync.js` - thin save/load layer; only replaces data when server has a real board
+- Removed `board-store.js` / `sample-tasks.js` split that broke the initial render
+
+### Reasoning
+- Single JSON blob in SQLite keeps v1 simple and matches the in-memory tree model
+- Debounced PUT after `snap()` covers all task mutations without touching every handler
+- Python fits the existing port-8090 hosting setup
+
+### Fixed
+- `seed_data.py` nested `make()` was re-processing already-built child nodes, stripping due/size/children
+- `board-sync.js` now rejects corrupt server boards so inline sample data is kept
+
 ## Testing infrastructure (2026-06-15)
 
 ### Added

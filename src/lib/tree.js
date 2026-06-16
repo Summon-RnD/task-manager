@@ -13,7 +13,12 @@ export function createTaskFactory() {
     children: opts.c || [],
     open: opts.open || false,
   });
-  return { T, resetUid: () => { uid = 0; }, getUid: () => uid };
+  return {
+    T,
+    resetUid: () => { uid = 0; },
+    getUid: () => uid,
+    setUid: (v) => { uid = v; },
+  };
 }
 
 export const flat = (nodes, fn, depth = 0, path = []) =>

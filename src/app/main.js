@@ -14,6 +14,7 @@ import {
   cap1, stripCaptions, findOwnerId, findDue, findSize,
   normalizeProposal, mockTranscript, isoCap,
 } from "../lib/capture.js";
+import { startBoardSync } from "../lib/board-sync.js";
 
 /* ================= sample data ================= */
 /* al = ASR aliases: common Whisper mishearings of each name.
@@ -22,7 +23,7 @@ import {
 const RESP_MAP_TEXT = buildRespMapText();
 const VOCAB_TEXT = buildVocabText();
 
-const { T } = createTaskFactory();
+const { T, setUid, getUid } = createTaskFactory();
 
 const DATA = [
   /* ---- Client pilot: Derichebourg (waste-sorting robot) ---- */
@@ -121,10 +122,11 @@ const GRIP_SVG='<svg width="11" height="17" viewBox="0 0 11 17" fill="currentCol
 
 /* ================= undo (ctrl/cmd+Z) ================= */
 const UNDO=[];
-function snap(){ UNDO.push(JSON.stringify(DATA)); if(UNDO.length>60) UNDO.shift(); }
+let requestSave = () => {};
+function snap(){ UNDO.push(JSON.stringify(DATA)); if(UNDO.length>60) UNDO.shift(); requestSave(); }
 function undo(){ if(!UNDO.length) return;
   DATA.splice(0,DATA.length,...JSON.parse(UNDO.pop()));
-  closeSheet(); ding(0); renderAll(); }
+  closeSheet(); ding(0); renderAll(); requestSave(); }
 document.addEventListener("keydown",e=>{
   if(e.key==="Escape"){ closeSheet(); closeCapture(); closeTeam(); closeBarMenu(); closeTranscript(); closeReview(); hideTip(); return; }
   if((e.ctrlKey||e.metaKey)&&!e.shiftKey&&e.key.toLowerCase()==="z"){
@@ -1512,9 +1514,9 @@ function renderTeam(){
     ${p.photo?`<button class="tbtn tdel" onclick="removePhoto('${k}')">Remove</button>`:""}</div>`).join("");
 }
 function uploadPhoto(k,input){ const f=input.files&&input.files[0]; if(!f) return;
-  const r=new FileReader(); r.onload=e=>{ PEOPLE[k].photo=e.target.result; renderTeam(); renderAll(); };
+  const r=new FileReader(); r.onload=e=>{ PEOPLE[k].photo=e.target.result; renderTeam(); renderAll(); requestSave(); };
   r.readAsDataURL(f); }
-function removePhoto(k){ delete PEOPLE[k].photo; renderTeam(); renderAll(); }
+function removePhoto(k){ delete PEOPLE[k].photo; renderTeam(); renderAll(); requestSave(); }
 
 /* ================= search ================= */
 function doSearch(){
@@ -1598,3 +1600,11 @@ const _globals = {
   delSub, commitCapture, toggleListen, stopListen, renderAll, moveTask, setKeyVal,
 };
 Object.assign(window, _globals);
+
+startBoardSync({
+  data: DATA,
+  getUid,
+  setUid,
+  renderAll,
+  onReady: (save) => { requestSave = save; },
+});
