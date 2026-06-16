@@ -11,10 +11,9 @@
 - `src/lib/persistence.js` - debounced auto-save (500ms) after edits
 
 ### Changed
-- `src/app/main.js` - loads board on startup, saves after mutations
-- `index.html` unchanged as ES module entry (logic stays in `src/`)
-- Restored sample task data as offline fallback (GitHub Pages / static serve)
-- Removed error banner when local sample data is used
+- `src/app/main.js` - restored main-branch UI boot (sync `renderAll()`), persistence loads in background
+- `src/lib/board-sync.js` - thin save/load layer; only replaces data when server has a real board
+- Removed `board-store.js` / `sample-tasks.js` split that broke the initial render
 
 ### Reasoning
 - Single JSON blob in SQLite keeps v1 simple and matches the in-memory tree model
