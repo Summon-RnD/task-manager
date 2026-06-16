@@ -7,7 +7,7 @@
 - `db.py` - SQLite storage in `data/taskboard.db`
 - `seed_data.py` - default team/tasks seeded on first run
 - `requirements.txt` - Flask dependency
-- `src/data/board-store.js` - mutable board state loaded from API
+- `src/data/board-store.js` and `src/data/defaults.js` - mutable board state loaded from API
 - `src/lib/persistence.js` - debounced auto-save (500ms) after edits
 
 ### Changed
