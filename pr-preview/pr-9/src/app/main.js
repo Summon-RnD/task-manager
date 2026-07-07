@@ -1209,7 +1209,11 @@ const ownerOpts=v=>`<option value="">Owner…</option>`+Object.entries(PEOPLE).m
 function ownerPill(v,onch){ const col=v?PEOPLE[v].color:"#c2c8d2";
   return `<span class="opill" style="--oc:${col}"><span class="odot"></span>
     <select onchange="${onch}">${ownerOpts(v)}</select></span>`; }
-function duePill(v,onch,sm){ return `<span class="duepill ${sm?'sm':''}"><input type="date" value="${v||''}" onchange="${onch}"></span>`; }
+function duePill(v,onch,sm){
+  const lbl=v?fmtD(v):"Set date";
+  return `<span class="duepill ${sm?'sm':''}"><span class="duelbl${v?'':' empty'}">${lbl}</span>`
+    +`<input type="date" value="${v||''}" onchange="${onch}" aria-label="Due date"></span>`;
+}
 function szSeg(v,onch){ return `<span class="szseg">${["s","m","l","xl"].map(z=>
   `<button class="szb ${v===z?'on':''}" onclick="${onch.replace('Z',"'"+z+"'")}">${SIZE_NAMES[z]}</button>`).join("")}</span>`; }
 function taskCardHTML(tk,i){ tk.subs=tk.subs||[];
