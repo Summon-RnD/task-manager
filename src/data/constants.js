@@ -39,14 +39,14 @@ export const SIZE_NAMES = { s: "S", m: "M", l: "L", xl: "XL" };
 export const LEAD = { s: 1, m: 3, l: 7, xl: 14 };
 
 export const ZOOMS = [
-  { l: "Day", h: 0, v: 3 },
-  { l: "Week", h: 7, v: 7 },
+  { l: "1 week", h: 7, v: 7 },
   { l: "3 weeks", h: 21, v: 21 },
   { l: "6 weeks", h: 42, v: 42 },
 ];
 
 export const GBAR_H = { s: 26, m: 34, l: 44, xl: 56 };
-export const R0G = 0;
+export const GANTT_PAST = 42;   // days before today included in the scrollable timeline
+export const R0G = -GANTT_PAST;
 export const R1G = 90;
 export const SPAN_G = R1G - R0G;
 export const TODAY_PX = 240;

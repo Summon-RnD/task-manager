@@ -1,7 +1,7 @@
 import {
   PEOPLE, TODAY, HARDWARE_VOCAB, CLIENTS,
   SIZE_PTS, SIZE_NAMES, LEAD, ZOOMS, GBAR_H,
-  R0G, R1G, SPAN_G, TODAY_PX,
+  R0G, R1G, SPAN_G, GANTT_PAST, TODAY_PX,
   C_LATE, C_TODAY, C_RADAR, C_LATER, C_DONE,
 } from "../data/constants.js";
 import { inferOwnerByDomain, canonHardware, findClient, buildRespMapText, buildVocabText, norm as _norm } from "../lib/domain.js";
@@ -231,7 +231,7 @@ function sizeScale(){
    bars. Bar height tracks t-shirt size; each bar has a done-dot (left) and owner bubble
    (right). The window scrolls horizontally; zoom buttons set how many days fit on screen. */
 /* chart starts at today - no dead space on the left */
-let ZOOM = 2, showDone = false;
+let ZOOM = 1, showDone = false;   // default: 3-week view
 const {
   dayN, dayIso, barSpan, workDays, barColor, barGeom,
   rollupSpan, spanFor, leafWeight, progWD, isUrgent, fmtD,
@@ -290,7 +290,31 @@ function toggleFocus(){ focusToday=!focusToday; const b=$id("gfocusbtn"); if(b)b
 let GVIEW="proj"; // "proj" | "tasks" | "subs"
 function setGView(v){ GVIEW=v; defer(renderGantt); }
 function setZoom(i){ ZOOM=i; setTimeout(renderAll,0); }   // drives the scale window and the gantt zoom
+/* scroll the timeline by one week without changing the visible day count (1W / 3W / 6W) */
+function navTimeline(dir){
+  const sc=document.querySelector(".gscroll"), inner=sc?.querySelector(".ginner");
+  if(!sc||!inner) return;
+  const anchor=scrollAnchorDay(sc,inner);
+  const target=Math.max(R0G,Math.min(R1G-ZOOMS[ZOOM].v,anchor+dir*7));
+  sc.scrollLeft=dayScrollPx(target,inner);
+  pinFlags(); placeFloat();
+}
+/* pixel offset of a day index on the inner track (inverse of gx) */
+function dayScrollPx(d,inner){
+  return gx(d)/100*inner.clientWidth;
+}
+/* day index nearest the left edge of the scrolled viewport */
+function scrollAnchorDay(sc,inner){
+  const frac=sc.scrollLeft/Math.max(inner.clientWidth,1)*100;
+  let best=R0G, dist=Infinity;
+  for(let d=R0G;d<=R1G;d++){
+    const g=gx(d); if(Math.abs(g-frac)<dist){ dist=Math.abs(g-frac); best=d; }
+  }
+  return best;
+}
 function renderGantt(){
+  const scBefore=document.querySelector(".gscroll");
+  const savedScroll=scBefore?scBefore.scrollLeft:null;
   const VIS=ZOOMS[ZOOM].v;
   // fixed-width today box: convert TODAY_PX into day units for the current zoom + panel width.
   // On phones the box is narrower so the rest of the timeline isn't squeezed off-screen.
@@ -302,15 +326,15 @@ function renderGantt(){
   // calendar axis: month headers + one weekday-letter + number per day (weekly when too tight)
   const showDaily=dayPx>=20;
   const months=[]; let lastM=-1;
-  for(let d=0;d<=R1G;d++){ const dt=new Date(dayIso(d)), m=dt.getFullYear()*12+dt.getMonth();
+  for(let d=R0G;d<=R1G;d++){ const dt=new Date(dayIso(d)), m=dt.getFullYear()*12+dt.getMonth();
     if(m!==lastM){ lastM=m; months.push({d,label:dt.toLocaleDateString("en-GB",{month:"short",year:"numeric"})}); } }
   const dticks=[];
-  for(let d=0;d<=R1G;d++){ const dt=new Date(dayIso(d)), wknd=dt.getDay()%6===0;
+  for(let d=R0G;d<=R1G;d++){ const dt=new Date(dayIso(d)), wknd=dt.getDay()%6===0;
     if(showDaily||dt.getDay()===1||d===0) dticks.push({d,wd:"SMTWTFS"[dt.getDay()],num:dt.getDate(),wknd,today:d===0}); }
   const zoomEl=document.getElementById("gzoom");
   if(zoomEl){ // build once; afterwards only toggle classes (keeps the clicked button alive)
     if(!zoomEl.childElementCount)
-      zoomEl.innerHTML=ZOOMS.map((z,i)=>`<button title="${z.l}" onclick="setZoom(${i})">${["D","1W","3W","6W"][i]}</button>`).join("");
+      zoomEl.innerHTML=ZOOMS.map((z,i)=>`<button title="${z.l}" onclick="setZoom(${i})">${["1W","3W","6W"][i]}</button>`).join("");
     [...zoomEl.children].forEach((b,i)=>b.classList.toggle("active",ZOOM===i));
   }
   // keep the three toggle pictograms lit in line with their state
@@ -324,13 +348,13 @@ function renderGantt(){
     [...gv.children].forEach((b,i)=>b.classList.toggle("active",GVIEW===GVKEYS[i]));
   }
   // calendar grid: faint day lines, firmer Monday lines, alternate weeks washed
-  const wk=[0];
-  for(let d=1;d<=R1G;d++) if(new Date(dayIso(d)).getDay()===1) wk.push(d);
+  const wk=[R0G];
+  for(let d=R0G+1;d<=R1G;d++) if(new Date(dayIso(d)).getDay()===1) wk.push(d);
   wk.push(R1G);
   const deco=[];
   for(let i=0;i<wk.length-1;i++) if(i%2===1)
     deco.push(`<div class="gwkband" style="left:${gx(wk[i])}%;width:${gx(wk[i+1])-gx(wk[i])}%"></div>`);
-  for(let d=1;d<R1G;d++){ const mon=new Date(dayIso(d)).getDay()===1;
+  for(let d=R0G+1;d<R1G;d++){ const mon=new Date(dayIso(d)).getDay()===1;
     deco.push(`<div class="${mon?'gweek':'gday'}" style="left:${gx(d)}%"></div>`); }
   months.forEach(m=>{ if(m.d>0) deco.push(`<div class="gmonthline" style="left:${gx(m.d)}%"></div>`); });
   const td=new Date(dayIso(0));
@@ -457,7 +481,10 @@ function renderGantt(){
     (any?"":'<div class="grow"><span style="color:var(--ink-3);font-size:13.5px;padding:6px 0">No scheduled tasks for this filter.</span></div>')+
     `</div></div>`;
   const sc=document.querySelector(".gscroll");
-  sc.addEventListener("scroll",pinFlags,{passive:true});
+  const inner=sc.querySelector(".ginner");
+  if(savedScroll!==null) sc.scrollLeft=savedScroll;
+  else sc.scrollLeft=dayScrollPx(0,inner);
+  if(!sc._pinBound){ sc._pinBound=true; sc.addEventListener("scroll",pinFlags,{passive:true}); }
   const gpane=document.querySelector(".gantt");
   if(gpane&&!gpane._floatBound){ gpane._floatBound=true; gpane.addEventListener("scroll",placeFloat,{passive:true}); }
   pinFlags(); placeFloat(); placeOverflowTitles();
@@ -1527,6 +1554,7 @@ const _globals = {
   toggleFlyout, toggleFocus, toggleShowDone, toggleSubs, closeCapture, toggleCapLang, minimizeCapture,
   sendTurn, restoreCapture, skipKey, saveKey, clearKey, closeTranscript, runTranscript, closeReview,
   closeTeam, closeSheet, setFilter, setScaleView, ding, toggleDone, openDetail, setZoom, setGView,
+  navTimeline,
   toggleExp, updTask, refreshBarMenu, addChild, addProject, deleteTask, addCapTask, barDown, barContext, pickSearch,
   uploadPhoto, removePhoto, rvToggle, rvText, rvOwner, rvDue, rvSize, pushApproved, attachTranscript,
   doSearch, refreshCard, delCapTask, setTask, setTaskOwner, setTaskSize, setSub, setSubOwner, addSub,
