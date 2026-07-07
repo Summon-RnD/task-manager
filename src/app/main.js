@@ -372,8 +372,7 @@ function renderGantt(){
             ?`background:#fff;border:2px solid ${col};color:${col}`
             :fillBg}">
           <i class="ear el" onpointerdown="barDown(event,${n.id},'l')"></i>
-          <span class="gava">${av(n.owner,"xs")}</span>
-          <span class="ttl">${n.title}</span>
+          <div class="gpin"><span class="gava">${av(n.owner,"xs")}</span><span class="ttl">${n.title}</span></div>
           <button class="gdot ${done?'on':''}" onpointerdown="event.stopPropagation()"
             onclick="event.stopPropagation();ding(4);toggleDone(${n.id})" aria-label="${done?'Undo done':'Mark done'}">${done?'✓':''}</button>
           <i class="ear er" onpointerdown="barDown(event,${n.id},'r')"></i>
@@ -414,12 +413,18 @@ function renderGantt(){
     let pPts=0; flat([p],x=>{ if(x.children.length) return; pPts+=SIZE_PTS[x.size||"m"]; });
     const ph=Math.max(7,Math.min(20,Math.round(5+Math.sqrt(pPts)*2.2)));
     rows.push(`<div class="pgroup" data-pid="${p.id}">
-      <div class="grow gsumrow" style="min-height:${18+ph+16}px"><div class="gtrack">
-        <button class="gsumlbl" style="left:${gx(scs)}%" onpointerdown="projDown(event,${p.id})"
-          data-full="${p.title} — ${ppc}% done · ${pPts} pts · ${open} open · due ${p.due?fmtD(p.due):"no date"} — click to manage, drag to reorder">${p.title}</button>
-        <div class="gsumline" style="left:${gx(scs)}%;width:${spanW}%;height:${ph}px"></div>
-        <div class="gsumfill" style="left:${gx(scs)}%;width:${spanW*prog}%;height:${ph}px"></div>
-        <span class="gsumpct" style="left:${gx(sce)}%;top:${Math.round(18+ph/2-6)}px">${ppc}%</span>
+      <div class="grow gsumrow"><div class="gtrack" style="height:${ph+34}px">
+        <div class="gsumtrack" style="left:${gx(scs)}%;width:${spanW}%">
+          <button class="gsumlbl" onpointerdown="projDown(event,${p.id})"
+            data-full="${p.title} — ${ppc}% done · ${pPts} pts · ${open} open · due ${p.due?fmtD(p.due):"no date"} — click to manage, drag to reorder">
+            <div class="gpin"><span class="gava">${av(p.owner,"xs")}</span><span class="ttl">${p.title}</span></div>
+          </button>
+          <div class="gsumbar">
+            <div class="gsumline" style="height:${ph}px"></div>
+            <div class="gsumfill" style="width:${prog*100}%;height:${ph}px"></div>
+            <span class="gsumpct">${ppc}%</span>
+          </div>
+        </div>
       </div></div>
       ${taskRows}</div>`);
   });
@@ -457,10 +462,10 @@ function renderGantt(){
     (any?"":'<div class="grow"><span style="color:var(--ink-3);font-size:13.5px;padding:6px 0">No scheduled tasks for this filter.</span></div>')+
     `</div></div>`;
   const sc=document.querySelector(".gscroll");
-  sc.addEventListener("scroll",pinFlags,{passive:true});
+  if(!sc._pinBound){ sc._pinBound=true; sc.addEventListener("scroll",pinGanttScroll,{passive:true}); }
   const gpane=document.querySelector(".gantt");
   if(gpane&&!gpane._floatBound){ gpane._floatBound=true; gpane.addEventListener("scroll",placeFloat,{passive:true}); }
-  pinFlags(); placeFloat(); placeOverflowTitles();
+  pinGanttScroll(); placeFloat(); placeOverflowTitles();
   // unstick Chromium's hover hit-testing after the DOM swap (otherwise tooltips/hover
   // stay dead until you move the mouse or switch tabs)
   if(typeof requestAnimationFrame!=="undefined")
@@ -485,37 +490,65 @@ function kickHover(){
    full title as plain text just to the right of the bar (no background) */
 function placeOverflowTitles(){
   document.querySelectorAll("#gantt .gttlout").forEach(x=>x.remove());
+  const overflow=(track,bar,ttl,rightPct,off)=>{
+    const full=ttl.scrollWidth, vis=ttl.clientWidth;
+    if(full>4 && vis<full*0.5){
+      ttl.style.visibility="hidden";
+      const lab=document.createElement("span");
+      lab.className="gttlout"; lab.textContent=ttl.textContent.trim();
+      lab.style.left="calc("+rightPct+"% + "+off+"px)";
+      track.appendChild(lab);
+    } else ttl.style.visibility="";
+  };
   document.querySelectorAll("#gantt .gtrack").forEach(track=>{
     track.querySelectorAll(":scope > .gbar").forEach(bar=>{
-      const ttl=bar.querySelector(".ttl"); if(!ttl) return;
-      const full=ttl.scrollWidth, vis=ttl.clientWidth;
-      if(full>4 && vis<full*0.5){
-        ttl.style.visibility="hidden";
-        const off=track.querySelector(".gexpw")?34:8;   // clear the subtask chevron (5px gap + 26px button + slack)
-        const right=parseFloat(bar.style.left||0)+parseFloat(bar.style.width||0);
-        const lab=document.createElement("span");
-        lab.className="gttlout"; lab.textContent=ttl.textContent.trim();
-        lab.style.left="calc("+right+"% + "+off+"px)";
-        track.appendChild(lab);
-      } else ttl.style.visibility="";
+      const ttl=bar.querySelector(".gpin .ttl")||bar.querySelector(".ttl"); if(!ttl) return;
+      const off=track.querySelector(".gexpw")?34:8;
+      const right=parseFloat(bar.style.left||0)+parseFloat(bar.style.width||0);
+      overflow(track,bar,ttl,right,off);
     });
+    const sum=track.querySelector(":scope > .gsumtrack");
+    const lbl=sum?.querySelector(".gsumlbl")||track.querySelector(":scope > .gsumlbl");
+    if(lbl){
+      const ttl=lbl.querySelector(".gpin .ttl")||lbl.querySelector(".ttl"); if(!ttl) return;
+      const right=sum
+        ?((sum.offsetLeft+sum.offsetWidth)/Math.max(track.clientWidth,1)*100)
+        :(parseFloat(lbl.style.left||0)+lbl.offsetWidth/Math.max(track.clientWidth,1)*100);
+      overflow(track,lbl,ttl,right,8);
+    }
+  });
+}
+function pinGanttScroll(){ pinFlags(); pinBars(); placeOverflowTitles(); }
+/* keep avatar + title visible when a bar extends beyond the horizontal viewport */
+function pinBars(){
+  const sc=document.querySelector(".gscroll"); if(!sc) return;
+  const v0=sc.scrollLeft, v1=v0+sc.clientWidth, pad=6;
+  sc.querySelectorAll(".gbar").forEach(bar=>{
+    const pin=bar.querySelector(".gpin"); if(!pin) return;
+    pin.style.left="0px";
+    const bl=bar.offsetLeft, br=bl+bar.offsetWidth;
+    if(br<=v0+pad||bl>=v1-pad) return;
+    const pinW=pin.offsetWidth; if(pinW<2) return;
+    const want=Math.max(bl,v0+pad);
+    const maxL=Math.max(bl,br-pinW-pad);
+    const abs=Math.min(want,maxL);
+    if(abs>bl+1) pin.style.left=(abs-bl)+"px";
   });
 }
 function pinFlags(){
   const sc=document.querySelector(".gscroll"); if(!sc) return;
-  const v0=sc.scrollLeft;
-  sc.querySelectorAll(".gsumrow").forEach(row=>{
-    const lbl=row.querySelector(".gsumlbl"), line=row.querySelector(".gsumline");
-    if(!lbl||!line) return;
-    // keep the project name visible: slide the label to the viewport's left edge as its
-    // range line scrolls past, but never beyond the line's right end
-    const ll=line.offsetLeft, lr=ll+line.offsetWidth;
-    let left=Math.max(ll,v0+4);
-    left=Math.min(left,Math.max(lr-46,ll));
-    lbl.style.left=left+"px";
+  const v0=sc.scrollLeft, pad=6;
+  sc.querySelectorAll(".gsumtrack").forEach(track=>{
+    const lbl=track.querySelector(".gsumlbl");
+    if(!lbl) return;
+    const ll=track.offsetLeft, lr=ll+track.offsetWidth;
+    const pinW=lbl.offsetWidth||46;
+    let abs=Math.max(ll,v0+pad);
+    abs=Math.min(abs,Math.max(lr-pinW-pad,ll));
+    lbl.style.left=(abs-ll)+"px";
   });
 }
-window.addEventListener("resize",()=>{ sizeScale(); applyTilt(lastTilt); defer(renderGantt); });
+window.addEventListener("resize",()=>{ sizeScale(); applyTilt(lastTilt); defer(renderGantt); pinBars(); });
 
 /* --- floating "gripped pill" ghost, shared by bar drags and pop-up task drags --- */
 function makeGhost(text,color){ const g=document.createElement("div");
@@ -601,6 +634,7 @@ function barMove(ev){
   const [cs,ce]=barGeom(G.s,G.e,G.n.done);
   G.el.style.left=gx(cs)+"%";
   G.el.style.width=(gx(ce)-gx(cs))+"%";
+  pinBars();
   if(G.ghost){ G.ghost.style.display=G.moved?"":"none";
     G.ghost.textContent=G.n.title+" · due "+fmtD(dayIso(G.e));
     placeGhost(G.ghost,ev); }

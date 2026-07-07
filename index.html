@@ -275,17 +275,28 @@
   /* project header: name on its own line, the progress bar on the line below it */
   /* top-align so the row's extra height (the gap before the first task) stays BELOW the bar,
      instead of being centered and pushing the project name down away from the ribbon */
-  .gsumrow{min-height:30px;align-items:flex-start}
-  /* project bar: a base track = the whole project duration, with a progress fill over it
-     (auto-computed from task completion weighted by size) */
-  .gsumline{position:absolute;top:18px;height:9px;border-radius:999px;background:#ccd4e2;pointer-events:none;z-index:0}
-  .gsumfill{position:absolute;top:18px;height:9px;border-radius:999px;background:#3b6ef6;pointer-events:none;z-index:1;min-width:0}
-  .gsumlbl{position:absolute;top:0;z-index:2;font-size:12.5px;font-weight:700;color:var(--ink-2);
-           background:none;padding:0 2px 0 1px;white-space:nowrap;cursor:grab;
+  .gsumrow{min-height:30px;align-items:flex-start;padding-top:2px}
+  /* project header: title bubble on row 1, progress bar + % on row 2 — never stacked */
+  .gsumrow .gtrack{height:auto;overflow:visible}
+  .gsumtrack{position:absolute;top:4px;display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+  .gsumbar{position:relative;left:0;right:0;top:auto;width:100%;min-height:9px;flex-shrink:0}
+  .gsumline{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);
+           height:9px;border-radius:999px;background:#ccd4e2;pointer-events:none;z-index:0}
+  .gsumfill{position:absolute;left:0;top:50%;transform:translateY(-50%);
+           height:9px;border-radius:999px;background:#3b6ef6;pointer-events:none;z-index:1;min-width:0}
+  .gsumlbl{position:relative;top:auto;left:0;z-index:2;flex-shrink:0;
+           display:inline-flex;align-items:center;
+           background:var(--surface);border:1px solid var(--line);border-radius:999px;
+           padding:2px 9px 2px 2px;box-shadow:0 2px 8px rgba(20,24,35,.1);
+           font:inherit;white-space:nowrap;cursor:grab;
            touch-action:none;-webkit-user-select:none;user-select:none}
-  .gsumlbl:hover{color:var(--ink)}
-  .gsumpct{position:absolute;top:16px;transform:translateX(7px);font-size:11px;font-weight:700;
-           color:var(--ink-3);white-space:nowrap;pointer-events:none}
+  .gsumlbl:hover{box-shadow:0 3px 11px rgba(20,24,35,.15)}
+  .gsumlbl .gpin{position:relative;left:0;top:auto;transform:none;padding-left:0;
+           max-width:min(220px,38vw);pointer-events:none;gap:6px}
+  .gsumlbl .gpin .ttl{color:var(--ink);font-size:12px;font-weight:700}
+  .gsumlbl .gava .av{width:20px;height:20px;font-size:8.5px;box-shadow:0 0 0 2px var(--surface)}
+  .gsumpct{position:absolute;left:100%;top:50%;transform:translate(7px,-50%);
+           font-size:11px;font-weight:700;color:var(--ink-3);white-space:nowrap;pointer-events:none;z-index:2}
   .pgroup.gdropover .gsumline{background:var(--accent)}
   .pgroup.insb{box-shadow:0 -3px 0 0 var(--accent)}
   .pgroup.insa{box-shadow:0 3px 0 0 var(--accent)}
@@ -294,11 +305,19 @@
   .gbar.gdropover{box-shadow:0 0 0 3px var(--accent)}
   .pgroup.gdropover{background:var(--accent-soft);border-radius:12px}
   .gbar{position:absolute;top:50%;transform:translateY(-50%);height:20px;border-radius:999px;min-width:16px;
-        display:flex;align-items:center;gap:6px;padding:0 12px 0 4px;overflow:hidden;
         box-shadow:0 2px 7px rgba(20,24,35,.16);
-        cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+        cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+        overflow:hidden}
   .gbar:hover{box-shadow:0 3px 11px rgba(20,24,35,.24)}
   .gbar:active{cursor:grabbing}
+  /* avatar + title cluster — slides within the bar to stay in the scrolled viewport */
+  .gpin{position:absolute;left:0;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px;
+        z-index:2;pointer-events:none;padding-left:4px;max-width:calc(100% - 24px)}
+  .gpin .ttl{font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;
+             text-overflow:ellipsis;flex:1;min-width:0;text-align:left;padding-left:1px}
+  .gbar.gsz-s .gpin .ttl{font-size:10.5px}.gbar.gsz-l .gpin .ttl{font-size:13px}
+  .gbar.gsz-xl .gpin .ttl{font-size:14px}
+  .gbar.gsub .gpin .ttl{color:inherit;font-size:11px}
   /* owner avatar fills the round left cap with an even ~4px margin on every side, so the
      space around it reads the same top, bottom and left regardless of bar height */
   .gava{flex:none;position:relative;z-index:2;line-height:0}
@@ -308,20 +327,18 @@
   .gbar.gsz-l .gava .av{width:36px;height:36px;font-size:14px}
   .gbar.gsz-xl .gava .av{width:48px;height:48px;font-size:18px}
   .gbar.gsz-s{height:26px}.gbar.gsz-m{height:34px}.gbar.gsz-l{height:44px}.gbar.gsz-xl{height:56px}
-  .gbar .ttl{font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;
-             text-overflow:ellipsis;pointer-events:none;flex:1;min-width:0;text-align:left;padding-left:1px}
-  .gbar.gsz-s .ttl{font-size:10.5px}.gbar.gsz-l .ttl{font-size:13px}.gbar.gsz-xl .ttl{font-size:14px}
+  .gdot{position:absolute;right:4px;top:50%;transform:translateY(-50%);
+        flex:none;z-index:2;width:16px;height:16px;border-radius:50%;padding:0;
+        border:2px solid rgba(255,255,255,.9);color:#fff;font-size:9px;
+        display:flex;align-items:center;justify-content:center;
+        opacity:0;border-width:0;transition:opacity .12s}
+  .gbar:hover .gdot{opacity:1;border-width:2px}
+  .gbar.gsz-s:hover .gdot{width:13px;height:13px}
+  .gdot.on{opacity:1;border-width:2px;background:#fff;border-color:#fff;color:var(--green)}
+  .gbar.gsz-s .gdot{width:13px;height:13px}
   /* title rendered to the right of a too-narrow bar (plain black text, no background) */
   .gttlout{position:absolute;top:50%;transform:translateY(-50%);font-size:12px;font-weight:700;
            color:var(--ink);white-space:nowrap;pointer-events:none;z-index:3}
-  .gdot{flex:none;position:relative;z-index:2;width:16px;height:16px;border-radius:50%;padding:0;
-        border:2px solid rgba(255,255,255,.9);color:#fff;font-size:9px;
-        display:flex;align-items:center;justify-content:center;
-        opacity:0;width:0;margin:0;border-width:0;transition:opacity .12s}
-  .gbar:hover .gdot{opacity:1;width:16px;border-width:2px;margin-right:0}
-  .gbar.gsz-s:hover .gdot{width:13px}
-  .gdot.on{opacity:1;width:16px;border-width:2px;background:#fff;border-color:#fff;color:var(--green)}
-  .gbar.gsz-s .gdot{width:13px;height:13px}
   .gavb{flex:none;position:relative;z-index:2;margin-left:auto;width:18px;height:18px;border-radius:50%;
         background:#fff;font-size:8.5px;font-weight:800;pointer-events:none;
         display:flex;align-items:center;justify-content:center}
@@ -333,7 +350,6 @@
   .gexp:hover{color:var(--accent)}
   /* subtasks are OUTLINED (light fill, coloured border + text) vs solid filled tasks */
   .gbar.gsub{box-shadow:0 1px 4px rgba(20,24,35,.12)}
-  .gbar.gsub .ttl{color:inherit;font-size:11px}
   .gbar.gsub .gava .av{width:15px;height:15px;font-size:7.5px;box-shadow:0 0 0 2px #fff}
   /* subtask bars have a WHITE fill, so the white done-dot was invisible on them — give the dot
      the bar's own colour on hover, and a solid green tick once checked */
@@ -341,7 +357,7 @@
   .gbar.gsub .gdot.on{background:var(--green);border-color:var(--green);color:#fff}
   .pflat{padding:12px 0 6px}
   .gbar.gdone{opacity:.4}
-  .gbar.gdone .ttl{text-decoration:line-through}
+  .gbar.gdone .gpin .ttl{text-decoration:line-through}
   .ear{position:absolute;top:0;bottom:0;width:13px;cursor:ew-resize;touch-action:none;
        opacity:0;transition:opacity .15s}
   .gbar:hover .ear,.gbar.dragging .ear{opacity:1}
