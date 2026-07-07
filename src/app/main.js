@@ -415,7 +415,9 @@ function renderGantt(){
     rows.push(`<div class="pgroup" data-pid="${p.id}">
       <div class="grow gsumrow" style="min-height:${18+ph+16}px"><div class="gtrack">
         <button class="gsumlbl" style="left:${gx(scs)}%" onpointerdown="projDown(event,${p.id})"
-          data-full="${p.title} — ${ppc}% done · ${pPts} pts · ${open} open · due ${p.due?fmtD(p.due):"no date"} — click to manage, drag to reorder">${p.title}</button>
+          data-full="${p.title} — ${ppc}% done · ${pPts} pts · ${open} open · due ${p.due?fmtD(p.due):"no date"} — click to manage, drag to reorder">
+          <div class="gpin"><span class="gava">${av(p.owner,"xs")}</span><span class="ttl">${p.title}</span></div>
+        </button>
         <div class="gsumline" style="left:${gx(scs)}%;width:${spanW}%;height:${ph}px"></div>
         <div class="gsumfill" style="left:${gx(scs)}%;width:${spanW*prog}%;height:${ph}px"></div>
         <span class="gsumpct" style="left:${gx(sce)}%;top:${Math.round(18+ph/2-6)}px">${ppc}%</span>
@@ -484,23 +486,35 @@ function kickHover(){
    full title as plain text just to the right of the bar (no background) */
 function placeOverflowTitles(){
   document.querySelectorAll("#gantt .gttlout").forEach(x=>x.remove());
+  const overflow=(track,bar,ttl,rightPct,off)=>{
+    const full=ttl.scrollWidth, vis=ttl.clientWidth;
+    if(full>4 && vis<full*0.5){
+      ttl.style.visibility="hidden";
+      const lab=document.createElement("span");
+      lab.className="gttlout"; lab.textContent=ttl.textContent.trim();
+      lab.style.left="calc("+rightPct+"% + "+off+"px)";
+      track.appendChild(lab);
+    } else ttl.style.visibility="";
+  };
   document.querySelectorAll("#gantt .gtrack").forEach(track=>{
     track.querySelectorAll(":scope > .gbar").forEach(bar=>{
       const ttl=bar.querySelector(".gpin .ttl")||bar.querySelector(".ttl"); if(!ttl) return;
-      const full=ttl.scrollWidth, vis=ttl.clientWidth;
-      if(full>4 && vis<full*0.5){
-        ttl.style.visibility="hidden";
-        const off=track.querySelector(".gexpw")?34:8;   // clear the subtask chevron (5px gap + 26px button + slack)
-        const right=parseFloat(bar.style.left||0)+parseFloat(bar.style.width||0);
-        const lab=document.createElement("span");
-        lab.className="gttlout"; lab.textContent=ttl.textContent.trim();
-        lab.style.left="calc("+right+"% + "+off+"px)";
-        track.appendChild(lab);
-      } else ttl.style.visibility="";
+      const off=track.querySelector(".gexpw")?34:8;
+      const right=parseFloat(bar.style.left||0)+parseFloat(bar.style.width||0);
+      overflow(track,bar,ttl,right,off);
     });
+    const lbl=track.querySelector(":scope > .gsumlbl");
+    if(lbl){
+      const ttl=lbl.querySelector(".gpin .ttl")||lbl.querySelector(".ttl"); if(!ttl) return;
+      const line=track.querySelector(".gsumline");
+      const right=line
+        ?((line.offsetLeft+line.offsetWidth)/Math.max(track.clientWidth,1)*100)
+        :(parseFloat(lbl.style.left||0)+lbl.offsetWidth/Math.max(track.clientWidth,1)*100);
+      overflow(track,lbl,ttl,right,8);
+    }
   });
 }
-function pinGanttScroll(){ pinFlags(); pinBars(); }
+function pinGanttScroll(){ pinFlags(); pinBars(); placeOverflowTitles(); }
 /* keep avatar + title visible when a bar extends beyond the horizontal viewport */
 function pinBars(){
   const sc=document.querySelector(".gscroll"); if(!sc) return;
@@ -519,15 +533,14 @@ function pinBars(){
 }
 function pinFlags(){
   const sc=document.querySelector(".gscroll"); if(!sc) return;
-  const v0=sc.scrollLeft;
+  const v0=sc.scrollLeft, pad=6;
   sc.querySelectorAll(".gsumrow").forEach(row=>{
     const lbl=row.querySelector(".gsumlbl"), line=row.querySelector(".gsumline");
     if(!lbl||!line) return;
-    // keep the project name visible: slide the label to the viewport's left edge as its
-    // range line scrolls past, but never beyond the line's right end
     const ll=line.offsetLeft, lr=ll+line.offsetWidth;
-    let left=Math.max(ll,v0+4);
-    left=Math.min(left,Math.max(lr-46,ll));
+    const pinW=lbl.offsetWidth||46;
+    let left=Math.max(ll,v0+pad);
+    left=Math.min(left,Math.max(lr-pinW-pad,ll));
     lbl.style.left=left+"px";
   });
 }

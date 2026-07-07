@@ -15,6 +15,12 @@ describe("project layout", () => {
     expect(main).toContain('class="gpin"');
   });
 
+  it("renders project name speech bubbles with owner avatar", () => {
+    const main = readFileSync("src/app/main.js", "utf8");
+    expect(main).toContain('class="gsumlbl"');
+    expect(main).toMatch(/gsumlbl[\s\S]*class="gpin"/);
+  });
+
   it("exports core lib modules", async () => {
     const domain = await import("../src/lib/domain.js");
     const tree = await import("../src/lib/tree.js");

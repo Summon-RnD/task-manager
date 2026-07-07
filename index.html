@@ -280,10 +280,16 @@
      (auto-computed from task completion weighted by size) */
   .gsumline{position:absolute;top:18px;height:9px;border-radius:999px;background:#ccd4e2;pointer-events:none;z-index:0}
   .gsumfill{position:absolute;top:18px;height:9px;border-radius:999px;background:#3b6ef6;pointer-events:none;z-index:1;min-width:0}
-  .gsumlbl{position:absolute;top:0;z-index:2;font-size:12.5px;font-weight:700;color:var(--ink-2);
-           background:none;padding:0 2px 0 1px;white-space:nowrap;cursor:grab;
+  .gsumlbl{position:absolute;top:0;z-index:2;display:inline-flex;align-items:center;
+           background:var(--surface);border:1px solid var(--line);border-radius:999px;
+           padding:3px 10px 3px 3px;box-shadow:0 2px 8px rgba(20,24,35,.1);
+           font:inherit;white-space:nowrap;cursor:grab;
            touch-action:none;-webkit-user-select:none;user-select:none}
-  .gsumlbl:hover{color:var(--ink)}
+  .gsumlbl:hover{box-shadow:0 3px 11px rgba(20,24,35,.16)}
+  .gsumlbl .gpin{position:relative;left:0;top:auto;transform:none;padding-left:0;
+           max-width:min(240px,42vw);pointer-events:none;gap:7px}
+  .gsumlbl .gpin .ttl{color:var(--ink);font-size:12.5px;font-weight:700}
+  .gsumlbl .gava .av{width:22px;height:22px;font-size:9px;box-shadow:0 0 0 2px var(--surface)}
   .gsumpct{position:absolute;top:16px;transform:translateX(7px);font-size:11px;font-weight:700;
            color:var(--ink-3);white-space:nowrap;pointer-events:none}
   .pgroup.gdropover .gsumline{background:var(--accent)}
