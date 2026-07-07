@@ -289,6 +289,20 @@ function toggleFocus(){ focusToday=!focusToday; const b=$id("gfocusbtn"); if(b)b
   defer(renderGantt); }
 let GVIEW="proj"; // "proj" | "tasks" | "subs"
 function setGView(v){ GVIEW=v; defer(renderGantt); }
+/* day offset of a node's bar start; undated items sink to the bottom */
+function startDay(n){ const{s}=spanFor(n); return isNaN(s)?Infinity:s; }
+function projectStartDay(p){ const{s}=rollupSpan(p); return isNaN(s)?Infinity:s; }
+function sortChronological(){
+  snap();
+  const byStart=(a,b)=>startDay(a)-startDay(b)||a.title.localeCompare(b.title);
+  DATA.sort((a,b)=>projectStartDay(a)-projectStartDay(b)||a.title.localeCompare(b.title));
+  DATA.forEach(p=>{
+    p.children.sort(byStart);
+    p.children.forEach(t=>{ if(t.children.length) t.children.sort(byStart); });
+  });
+  flashDesc("chrono","Sorted by start date");
+  renderAll();
+}
 function setZoom(i){ ZOOM=i; setTimeout(renderAll,0); }   // drives the scale window and the gantt zoom
 function renderGantt(){
   const VIS=ZOOMS[ZOOM].v;
@@ -1527,6 +1541,7 @@ const _globals = {
   toggleFlyout, toggleFocus, toggleShowDone, toggleSubs, closeCapture, toggleCapLang, minimizeCapture,
   sendTurn, restoreCapture, skipKey, saveKey, clearKey, closeTranscript, runTranscript, closeReview,
   closeTeam, closeSheet, setFilter, setScaleView, ding, toggleDone, openDetail, setZoom, setGView,
+  sortChronological,
   toggleExp, updTask, refreshBarMenu, addChild, addProject, deleteTask, addCapTask, barDown, barContext, pickSearch,
   uploadPhoto, removePhoto, rvToggle, rvText, rvOwner, rvDue, rvSize, pushApproved, attachTranscript,
   doSearch, refreshCard, delCapTask, setTask, setTaskOwner, setTaskSize, setSub, setSubOwner, addSub,
