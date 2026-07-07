@@ -6,11 +6,11 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>Summon</title>
-<link rel="icon" href="assets/favicon.ico" sizes="any">
-<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
-<link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+<link rel="icon" href="/assets/favicon.ico" sizes="any">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png">
 <style>
   :root{
     --bg:#f6f7f9; --surface:#ffffff; --ink:#1a1d23; --ink-2:#5b626e; --ink-3:#9aa1ac;
@@ -43,8 +43,9 @@
           box-shadow:0 5px 16px rgba(20,24,35,.32)}
   .sbshow:hover{background:#23262e}
   body.sbhide .sbshow{display:flex}
-  .sblogo{width:30px;height:30px;border-radius:9px;margin-bottom:12px;flex:none;display:block;
-          object-fit:contain;background:#fff}
+  .sblogo{width:30px;height:30px;border-radius:9px;margin-bottom:12px;flex:none;
+          display:flex;align-items:center;justify-content:center;background:#fff;overflow:hidden}
+  .sblogo svg{width:100%;height:100%;display:block}
   .sbicon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#9aa1ac;flex:none}
   .sbicon:hover{background:rgba(255,255,255,.08);color:#fff}
   .sbicon.active{background:rgba(255,255,255,.13);color:#fff}
@@ -650,7 +651,13 @@
 <body>
 
 <aside class="sidebar">
-  <img class="sblogo" src="assets/logo.svg" alt="Summon" width="30" height="30">
+  <div class="sblogo" aria-label="Summon">
+    <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+      <rect width="120" height="120" fill="#ffffff"/>
+      <text x="14" y="86" font-family="Arial Black, Arial, Helvetica, sans-serif" font-size="76" font-weight="900" fill="#000000">S</text>
+      <circle cx="92" cy="80" r="8" fill="#000000"/>
+    </svg>
+  </div>
   <button class="sbicon" id="sbsearch" title="Search tasks" onclick="toggleSearch()">
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="9" r="5.4"/><path d="M13.4 13.4 17 17"/></svg>
   </button>
