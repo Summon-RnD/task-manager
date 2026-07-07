@@ -275,23 +275,26 @@
   /* project header: name on its own line, the progress bar on the line below it */
   /* top-align so the row's extra height (the gap before the first task) stays BELOW the bar,
      instead of being centered and pushing the project name down away from the ribbon */
-  .gsumrow{min-height:30px;align-items:flex-start}
-  /* project bar: a base track = the whole project duration, with a progress fill over it
-     (auto-computed from task completion weighted by size) */
-  .gsumline{position:absolute;top:18px;height:9px;border-radius:999px;background:#ccd4e2;pointer-events:none;z-index:0}
-  .gsumfill{position:absolute;top:18px;height:9px;border-radius:999px;background:#3b6ef6;pointer-events:none;z-index:1;min-width:0}
-  .gsumlbl{position:absolute;top:0;z-index:2;display:inline-flex;align-items:center;
+  .gsumrow{min-height:30px;align-items:flex-start;padding-top:4px}
+  /* project track: progress bar spans the full width; title bubble sits on the left cap */
+  .gsumtrack{position:absolute;top:8px;min-height:28px}
+  .gsumline{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);
+           height:9px;border-radius:999px;background:#ccd4e2;pointer-events:none;z-index:0}
+  .gsumfill{position:absolute;left:0;top:50%;transform:translateY(-50%);
+           height:9px;border-radius:999px;background:#3b6ef6;pointer-events:none;z-index:1;min-width:0}
+  .gsumlbl{position:absolute;left:0;top:50%;transform:translateY(-50%);z-index:3;
+           display:inline-flex;align-items:center;
            background:var(--surface);border:1px solid var(--line);border-radius:999px;
-           padding:3px 10px 3px 3px;box-shadow:0 2px 8px rgba(20,24,35,.1);
+           padding:2px 9px 2px 2px;box-shadow:0 2px 8px rgba(20,24,35,.12);
            font:inherit;white-space:nowrap;cursor:grab;
            touch-action:none;-webkit-user-select:none;user-select:none}
-  .gsumlbl:hover{box-shadow:0 3px 11px rgba(20,24,35,.16)}
+  .gsumlbl:hover{box-shadow:0 3px 11px rgba(20,24,35,.18)}
   .gsumlbl .gpin{position:relative;left:0;top:auto;transform:none;padding-left:0;
-           max-width:min(240px,42vw);pointer-events:none;gap:7px}
-  .gsumlbl .gpin .ttl{color:var(--ink);font-size:12.5px;font-weight:700}
-  .gsumlbl .gava .av{width:22px;height:22px;font-size:9px;box-shadow:0 0 0 2px var(--surface)}
-  .gsumpct{position:absolute;top:16px;transform:translateX(7px);font-size:11px;font-weight:700;
-           color:var(--ink-3);white-space:nowrap;pointer-events:none}
+           max-width:min(220px,38vw);pointer-events:none;gap:6px}
+  .gsumlbl .gpin .ttl{color:var(--ink);font-size:12px;font-weight:700}
+  .gsumlbl .gava .av{width:20px;height:20px;font-size:8.5px;box-shadow:0 0 0 2px var(--surface)}
+  .gsumpct{position:absolute;right:0;top:50%;transform:translate(100%,-50%);margin-left:7px;
+           font-size:11px;font-weight:700;color:var(--ink-3);white-space:nowrap;pointer-events:none;z-index:2}
   .pgroup.gdropover .gsumline{background:var(--accent)}
   .pgroup.insb{box-shadow:0 -3px 0 0 var(--accent)}
   .pgroup.insa{box-shadow:0 3px 0 0 var(--accent)}

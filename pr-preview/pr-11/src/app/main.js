@@ -413,14 +413,16 @@ function renderGantt(){
     let pPts=0; flat([p],x=>{ if(x.children.length) return; pPts+=SIZE_PTS[x.size||"m"]; });
     const ph=Math.max(7,Math.min(20,Math.round(5+Math.sqrt(pPts)*2.2)));
     rows.push(`<div class="pgroup" data-pid="${p.id}">
-      <div class="grow gsumrow" style="min-height:${18+ph+16}px"><div class="gtrack">
-        <button class="gsumlbl" style="left:${gx(scs)}%" onpointerdown="projDown(event,${p.id})"
-          data-full="${p.title} — ${ppc}% done · ${pPts} pts · ${open} open · due ${p.due?fmtD(p.due):"no date"} — click to manage, drag to reorder">
-          <div class="gpin"><span class="gava">${av(p.owner,"xs")}</span><span class="ttl">${p.title}</span></div>
-        </button>
-        <div class="gsumline" style="left:${gx(scs)}%;width:${spanW}%;height:${ph}px"></div>
-        <div class="gsumfill" style="left:${gx(scs)}%;width:${spanW*prog}%;height:${ph}px"></div>
-        <span class="gsumpct" style="left:${gx(sce)}%;top:${Math.round(18+ph/2-6)}px">${ppc}%</span>
+      <div class="grow gsumrow" style="min-height:${Math.max(ph+28,36)}px"><div class="gtrack">
+        <div class="gsumtrack" style="left:${gx(scs)}%;width:${spanW}%">
+          <div class="gsumline" style="height:${ph}px"></div>
+          <div class="gsumfill" style="width:${prog*100}%;height:${ph}px"></div>
+          <button class="gsumlbl" onpointerdown="projDown(event,${p.id})"
+            data-full="${p.title} — ${ppc}% done · ${pPts} pts · ${open} open · due ${p.due?fmtD(p.due):"no date"} — click to manage, drag to reorder">
+            <div class="gpin"><span class="gava">${av(p.owner,"xs")}</span><span class="ttl">${p.title}</span></div>
+          </button>
+          <span class="gsumpct">${ppc}%</span>
+        </div>
       </div></div>
       ${taskRows}</div>`);
   });
@@ -506,9 +508,9 @@ function placeOverflowTitles(){
     const lbl=track.querySelector(":scope > .gsumlbl");
     if(lbl){
       const ttl=lbl.querySelector(".gpin .ttl")||lbl.querySelector(".ttl"); if(!ttl) return;
-      const line=track.querySelector(".gsumline");
-      const right=line
-        ?((line.offsetLeft+line.offsetWidth)/Math.max(track.clientWidth,1)*100)
+      const sum=track.querySelector(":scope > .gsumtrack");
+      const right=sum
+        ?((sum.offsetLeft+sum.offsetWidth)/Math.max(track.clientWidth,1)*100)
         :(parseFloat(lbl.style.left||0)+lbl.offsetWidth/Math.max(track.clientWidth,1)*100);
       overflow(track,lbl,ttl,right,8);
     }
@@ -534,14 +536,14 @@ function pinBars(){
 function pinFlags(){
   const sc=document.querySelector(".gscroll"); if(!sc) return;
   const v0=sc.scrollLeft, pad=6;
-  sc.querySelectorAll(".gsumrow").forEach(row=>{
-    const lbl=row.querySelector(".gsumlbl"), line=row.querySelector(".gsumline");
-    if(!lbl||!line) return;
-    const ll=line.offsetLeft, lr=ll+line.offsetWidth;
+  sc.querySelectorAll(".gsumtrack").forEach(track=>{
+    const lbl=track.querySelector(".gsumlbl");
+    if(!lbl) return;
+    const ll=track.offsetLeft, lr=ll+track.offsetWidth;
     const pinW=lbl.offsetWidth||46;
-    let left=Math.max(ll,v0+pad);
-    left=Math.min(left,Math.max(lr-pinW-pad,ll));
-    lbl.style.left=left+"px";
+    let abs=Math.max(ll,v0+pad);
+    abs=Math.min(abs,Math.max(lr-pinW-pad,ll));
+    lbl.style.left=(abs-ll)+"px";
   });
 }
 window.addEventListener("resize",()=>{ sizeScale(); applyTilt(lastTilt); defer(renderGantt); pinBars(); });
