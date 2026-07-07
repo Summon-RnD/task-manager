@@ -413,15 +413,17 @@ function renderGantt(){
     let pPts=0; flat([p],x=>{ if(x.children.length) return; pPts+=SIZE_PTS[x.size||"m"]; });
     const ph=Math.max(7,Math.min(20,Math.round(5+Math.sqrt(pPts)*2.2)));
     rows.push(`<div class="pgroup" data-pid="${p.id}">
-      <div class="grow gsumrow" style="min-height:${Math.max(ph+28,36)}px"><div class="gtrack">
+      <div class="grow gsumrow" style="min-height:${ph+42}px"><div class="gtrack">
         <div class="gsumtrack" style="left:${gx(scs)}%;width:${spanW}%">
-          <div class="gsumline" style="height:${ph}px"></div>
-          <div class="gsumfill" style="width:${prog*100}%;height:${ph}px"></div>
           <button class="gsumlbl" onpointerdown="projDown(event,${p.id})"
             data-full="${p.title} — ${ppc}% done · ${pPts} pts · ${open} open · due ${p.due?fmtD(p.due):"no date"} — click to manage, drag to reorder">
             <div class="gpin"><span class="gava">${av(p.owner,"xs")}</span><span class="ttl">${p.title}</span></div>
           </button>
-          <span class="gsumpct">${ppc}%</span>
+          <div class="gsumbar">
+            <div class="gsumline" style="height:${ph}px"></div>
+            <div class="gsumfill" style="width:${prog*100}%;height:${ph}px"></div>
+            <span class="gsumpct">${ppc}%</span>
+          </div>
         </div>
       </div></div>
       ${taskRows}</div>`);
