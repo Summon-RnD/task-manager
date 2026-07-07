@@ -851,7 +851,7 @@ function openDetail(id){
   document.getElementById("dBody").innerHTML=`
     <div class="frow"><span class="lbl">Owner</span>${av(n.owner)}<select onchange="updTask(${id},'owner',this.value)">
       ${Object.entries(PEOPLE).map(([k,pp])=>`<option value="${k}" ${k===n.owner?'selected':''}>${pp.name}</option>`).join("")}</select></div>
-    <div class="frow"><span class="lbl">Due</span><input type="date" value="${n.due||""}" onchange="updTask(${id},'due',this.value)">${dueChip(n.due,leaf&&n.done)}</div>
+    <div class="frow"><span class="lbl">Due</span>${duePill(n.due,`updTask(${id},'due',this.value)`)}${dueChip(n.due,leaf&&n.done)}</div>
     ${sizeFld}
     ${leaf?`<div class="frow"><span class="lbl">Status</span>
       <button class="chip" style="${n.done?'background:var(--green-soft);color:var(--green)':'background:#eef0f4;color:var(--ink-2)'}"
@@ -1211,8 +1211,15 @@ function ownerPill(v,onch){ const col=v?PEOPLE[v].color:"#c2c8d2";
     <select onchange="${onch}">${ownerOpts(v)}</select></span>`; }
 function duePill(v,onch,sm){
   const lbl=v?fmtD(v):"Set date";
-  return `<span class="duepill ${sm?'sm':''}"><span class="duelbl${v?'':' empty'}">${lbl}</span>`
-    +`<input type="date" value="${v||''}" onchange="${onch}" aria-label="Due date"></span>`;
+  return `<label class="duepill ${sm?'sm':''}" onclick="pickDueEl(this)">`
+    +`<span class="duelbl${v?'':' empty'}">${lbl}</span>`
+    +`<input type="date" class="duepick" value="${v||''}" onchange="${onch}" tabindex="-1" aria-label="Due date"></label>`;
+}
+function pickDueEl(el){
+  const inp=el&&el.querySelector("input.duepick");
+  if(!inp) return;
+  if(typeof inp.showPicker==="function"){ try{ inp.showPicker(); return; }catch(_){ /* fall through */ } }
+  inp.focus(); inp.click();
 }
 function szSeg(v,onch){ return `<span class="szseg">${["s","m","l","xl"].map(z=>
   `<button class="szb ${v===z?'on':''}" onclick="${onch.replace('Z',"'"+z+"'")}">${SIZE_NAMES[z]}</button>`).join("")}</span>`; }
@@ -1534,7 +1541,7 @@ const _globals = {
   toggleExp, updTask, refreshBarMenu, addChild, addProject, deleteTask, addCapTask, barDown, barContext, pickSearch,
   uploadPhoto, removePhoto, rvToggle, rvText, rvOwner, rvDue, rvSize, pushApproved, attachTranscript,
   doSearch, refreshCard, delCapTask, setTask, setTaskOwner, setTaskSize, setSub, setSubOwner, addSub,
-  delSub, commitCapture, toggleListen, stopListen, renderAll, moveTask, setKeyVal,
+  delSub, commitCapture, toggleListen, stopListen, renderAll, moveTask, setKeyVal, pickDueEl,
 };
 Object.assign(window, _globals);
 

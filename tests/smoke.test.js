@@ -24,5 +24,6 @@ describe("project layout", () => {
     const main = readFileSync("src/app/main.js", "utf8");
     expect(main).toContain("duePill(ch.due,`updTask(${ch.id},'due',this.value,true);openDetail(${id})`,true)");
     expect(main).toContain('class="duelbl');
+    expect(main).toContain("pickDueEl");
   });
 });
