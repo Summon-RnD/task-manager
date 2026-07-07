@@ -19,4 +19,9 @@ describe("project layout", () => {
     expect(dates.createDateHelpers).toBeTypeOf("function");
     expect(capture.mockTranscript).toBeTypeOf("function");
   });
+
+  it("allows inline due-date editing on tasks and subtasks in detail panels", () => {
+    const main = readFileSync("src/app/main.js", "utf8");
+    expect(main).toContain("duePill(ch.due,`updTask(${ch.id},'due',this.value,true);openDetail(${id})`,true)");
+  });
 });

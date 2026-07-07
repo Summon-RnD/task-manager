@@ -869,7 +869,7 @@ function openDetail(id){
         <button class="t" style="text-align:left" onclick="openDetail(${ch.id})">${ch.title}</button>
         ${ownerPill(ch.owner,`updTask(${ch.id},'owner',this.value,true);openDetail(${id})`)}
         ${szCtl}
-        ${dueChip(ch.due,lleaf&&ch.done)}</div>`;}).join("")}
+        ${duePill(ch.due,`updTask(${ch.id},'due',this.value,true);openDetail(${id})`,true)}</div>`;}).join("")}
     ${path.length>=3?"":`<div class="subadd" style="margin-top:10px"><input id="dSubNew" placeholder="Add a ${path.length>1?"subtask":"task"}…"><button onclick="addChild(${id})">Add</button></div>`}
     <button class="danger" onclick="deleteTask(${id})">Delete ${path.length===1?"project":path.length>=3?"subtask":"task"}</button>`;
   document.getElementById("tmodal").classList.add("show");
