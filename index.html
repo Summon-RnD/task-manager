@@ -5,7 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<title>TaskBoard — Prototype</title>
+<title>Summon</title>
+<link rel="icon" href="assets/favicon.ico" sizes="any">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
 <style>
   :root{
     --bg:#f6f7f9; --surface:#ffffff; --ink:#1a1d23; --ink-2:#5b626e; --ink-3:#9aa1ac;
@@ -38,7 +43,8 @@
           box-shadow:0 5px 16px rgba(20,24,35,.32)}
   .sbshow:hover{background:#23262e}
   body.sbhide .sbshow{display:flex}
-  .sblogo{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#3b6ef6,#9b8cff);margin-bottom:12px;flex:none}
+  .sblogo{width:30px;height:30px;border-radius:9px;margin-bottom:12px;flex:none;display:block;
+          object-fit:contain;background:#fff}
   .sbicon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#9aa1ac;flex:none}
   .sbicon:hover{background:rgba(255,255,255,.08);color:#fff}
   .sbicon.active{background:rgba(255,255,255,.13);color:#fff}
@@ -644,7 +650,7 @@
 <body>
 
 <aside class="sidebar">
-  <div class="sblogo"></div>
+  <img class="sblogo" src="assets/logo.svg" alt="Summon" width="30" height="30">
   <button class="sbicon" id="sbsearch" title="Search tasks" onclick="toggleSearch()">
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="9" r="5.4"/><path d="M13.4 13.4 17 17"/></svg>
   </button>

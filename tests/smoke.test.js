@@ -7,6 +7,8 @@ describe("project layout", () => {
     expect(html).toContain('<script type="module" src="src/app/main.js">');
     expect(html).not.toContain("<script>\n/* ================= sample data");
     expect(html).toContain('onclick="addProject()"');
+    expect(html).toContain('href="assets/favicon.ico"');
+    expect(html).toContain('src="assets/logo.svg"');
   });
 
   it("exports core lib modules", async () => {
