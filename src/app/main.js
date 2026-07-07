@@ -563,6 +563,7 @@ function barDown(e,id,mode){
   document.addEventListener("pointermove",barMove,{passive:false});
   document.addEventListener("pointerup",barUp);
   document.addEventListener("pointercancel",barUp);
+  if(mode==="l"||mode==="r") showDragTip(fmtD(dayIso(mode==="l"?s:en)),e);
 }
 function clearReMark(){ document.querySelectorAll(".grow.reinsb,.grow.reinsa")
   .forEach(x=>x.classList.remove("reinsb","reinsa")); }
@@ -601,7 +602,8 @@ function barMove(ev){
   const [cs,ce]=barGeom(G.s,G.e,G.n.done);
   G.el.style.left=gx(cs)+"%";
   G.el.style.width=(gx(ce)-gx(cs))+"%";
-  if(G.ghost){ G.ghost.style.display=G.moved?"":"none";
+  if(G.mode==="l"||G.mode==="r") showDragTip(fmtD(dayIso(G.mode==="l"?G.s:G.e)),ev);
+  else if(G.ghost){ G.ghost.style.display=G.moved?"":"none";
     G.ghost.textContent=G.n.title+" · due "+fmtD(dayIso(G.e));
     placeGhost(G.ghost,ev); }
   if(G.mode==="move"){
@@ -614,6 +616,7 @@ function barUp(e){
   document.removeEventListener("pointermove",barMove);
   document.removeEventListener("pointerup",barUp);
   document.removeEventListener("pointercancel",barUp);
+  hideDragTip();
   if(!G) return;                                   // long-press already handled it
   if(G.longTimer){ clearTimeout(G.longTimer); G.longTimer=null; }
   G.el.classList.remove("dragging"); G.el.style.opacity="";
@@ -1480,7 +1483,16 @@ function pickSearch(id){ const sb=document.getElementById("searchbox");
 const TIP=document.createElement("div"); TIP.id="gtip"; document.body.appendChild(TIP);
 let MX=-1,MY=-1,tipKey=null,tipTimer=null,tipEl=null;
 let PTRDOWN=false; // physical button held (i.e. a drag in progress) — suppress the tip
-function hideTip(){ clearTimeout(tipTimer); tipTimer=null; tipKey=null; tipEl=null; TIP.style.display="none"; }
+let dragTip=false; // live date tooltip while resizing a bar by its ears
+function hideTip(){ dragTip=false; clearTimeout(tipTimer); tipTimer=null; tipKey=null; tipEl=null; TIP.style.display="none"; }
+function showDragTip(text,ev){
+  dragTip=true;
+  MX=ev.clientX; MY=ev.clientY;
+  TIP.textContent=text;
+  TIP.style.display="block";
+  placeTip();
+}
+function hideDragTip(){ dragTip=false; hideTip(); }
 function placeTip(){
   TIP.style.left=Math.max(8,Math.min(MX+14,window.innerWidth-TIP.offsetWidth-10))+"px";
   TIP.style.top =Math.max(6,MY-TIP.offsetHeight-16)+"px";
@@ -1491,7 +1503,7 @@ function revealTip(){ tipTimer=null;
 }
 /* feed me the element under the pointer, taken from a live event target (or a fresh hit-test) */
 function hoverOn(target){
-  if(PTRDOWN){ hideTip(); return; }
+  if(PTRDOWN){ if(dragTip) return; hideTip(); return; }
   const host=(target&&target.closest)?target.closest("[data-full]"):null;
   if(!host){ hideTip(); return; }
   const key=host.dataset.tid||host.dataset.full;
@@ -1513,7 +1525,7 @@ document.addEventListener("pointerout", e=>{ if(!e.relatedTarget) hideTip(); },{
 document.addEventListener("mousemove",onMove,{passive:true});                                  // fallbacks if
 document.addEventListener("mouseover",e=>{ MX=e.clientX; MY=e.clientY; hoverOn(e.target); },{passive:true}); // pointer events glitch
 // scrolling hides the tip; the next real hover re-arms it
-document.addEventListener("scroll",()=>hideTip(),true);
+document.addEventListener("scroll",()=>{ if(!dragTip) hideTip(); },true);
 // (no idle watchdog: the tooltip appears ONLY on a real hover, never synthesized from a click/render)
 
 function renderAll(){ renderFilter(); renderDash();
