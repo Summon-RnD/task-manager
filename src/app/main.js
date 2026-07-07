@@ -372,8 +372,7 @@ function renderGantt(){
             ?`background:#fff;border:2px solid ${col};color:${col}`
             :fillBg}">
           <i class="ear el" onpointerdown="barDown(event,${n.id},'l')"></i>
-          <span class="gava">${av(n.owner,"xs")}</span>
-          <span class="ttl">${n.title}</span>
+          <div class="gpin"><span class="gava">${av(n.owner,"xs")}</span><span class="ttl">${n.title}</span></div>
           <button class="gdot ${done?'on':''}" onpointerdown="event.stopPropagation()"
             onclick="event.stopPropagation();ding(4);toggleDone(${n.id})" aria-label="${done?'Undo done':'Mark done'}">${done?'✓':''}</button>
           <i class="ear er" onpointerdown="barDown(event,${n.id},'r')"></i>
@@ -457,10 +456,10 @@ function renderGantt(){
     (any?"":'<div class="grow"><span style="color:var(--ink-3);font-size:13.5px;padding:6px 0">No scheduled tasks for this filter.</span></div>')+
     `</div></div>`;
   const sc=document.querySelector(".gscroll");
-  sc.addEventListener("scroll",pinFlags,{passive:true});
+  if(!sc._pinBound){ sc._pinBound=true; sc.addEventListener("scroll",pinGanttScroll,{passive:true}); }
   const gpane=document.querySelector(".gantt");
   if(gpane&&!gpane._floatBound){ gpane._floatBound=true; gpane.addEventListener("scroll",placeFloat,{passive:true}); }
-  pinFlags(); placeFloat(); placeOverflowTitles();
+  pinGanttScroll(); placeFloat(); placeOverflowTitles();
   // unstick Chromium's hover hit-testing after the DOM swap (otherwise tooltips/hover
   // stay dead until you move the mouse or switch tabs)
   if(typeof requestAnimationFrame!=="undefined")
@@ -487,7 +486,7 @@ function placeOverflowTitles(){
   document.querySelectorAll("#gantt .gttlout").forEach(x=>x.remove());
   document.querySelectorAll("#gantt .gtrack").forEach(track=>{
     track.querySelectorAll(":scope > .gbar").forEach(bar=>{
-      const ttl=bar.querySelector(".ttl"); if(!ttl) return;
+      const ttl=bar.querySelector(".gpin .ttl")||bar.querySelector(".ttl"); if(!ttl) return;
       const full=ttl.scrollWidth, vis=ttl.clientWidth;
       if(full>4 && vis<full*0.5){
         ttl.style.visibility="hidden";
@@ -499,6 +498,23 @@ function placeOverflowTitles(){
         track.appendChild(lab);
       } else ttl.style.visibility="";
     });
+  });
+}
+function pinGanttScroll(){ pinFlags(); pinBars(); }
+/* keep avatar + title visible when a bar extends beyond the horizontal viewport */
+function pinBars(){
+  const sc=document.querySelector(".gscroll"); if(!sc) return;
+  const v0=sc.scrollLeft, v1=v0+sc.clientWidth, pad=6;
+  sc.querySelectorAll(".gbar").forEach(bar=>{
+    const pin=bar.querySelector(".gpin"); if(!pin) return;
+    pin.style.left="0px";
+    const bl=bar.offsetLeft, br=bl+bar.offsetWidth;
+    if(br<=v0+pad||bl>=v1-pad) return;
+    const pinW=pin.offsetWidth; if(pinW<2) return;
+    const want=Math.max(bl,v0+pad);
+    const maxL=Math.max(bl,br-pinW-pad);
+    const abs=Math.min(want,maxL);
+    if(abs>bl+1) pin.style.left=(abs-bl)+"px";
   });
 }
 function pinFlags(){
@@ -515,7 +531,7 @@ function pinFlags(){
     lbl.style.left=left+"px";
   });
 }
-window.addEventListener("resize",()=>{ sizeScale(); applyTilt(lastTilt); defer(renderGantt); });
+window.addEventListener("resize",()=>{ sizeScale(); applyTilt(lastTilt); defer(renderGantt); pinBars(); });
 
 /* --- floating "gripped pill" ghost, shared by bar drags and pop-up task drags --- */
 function makeGhost(text,color){ const g=document.createElement("div");
@@ -601,6 +617,7 @@ function barMove(ev){
   const [cs,ce]=barGeom(G.s,G.e,G.n.done);
   G.el.style.left=gx(cs)+"%";
   G.el.style.width=(gx(ce)-gx(cs))+"%";
+  pinBars();
   if(G.ghost){ G.ghost.style.display=G.moved?"":"none";
     G.ghost.textContent=G.n.title+" · due "+fmtD(dayIso(G.e));
     placeGhost(G.ghost,ev); }

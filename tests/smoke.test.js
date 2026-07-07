@@ -9,6 +9,12 @@ describe("project layout", () => {
     expect(html).toContain('onclick="addProject()"');
   });
 
+  it("pins task bar avatar and title during horizontal scroll", () => {
+    const main = readFileSync("src/app/main.js", "utf8");
+    expect(main).toContain("function pinBars()");
+    expect(main).toContain('class="gpin"');
+  });
+
   it("exports core lib modules", async () => {
     const domain = await import("../src/lib/domain.js");
     const tree = await import("../src/lib/tree.js");
