@@ -413,7 +413,7 @@ function renderGantt(){
     let pPts=0; flat([p],x=>{ if(x.children.length) return; pPts+=SIZE_PTS[x.size||"m"]; });
     const ph=Math.max(7,Math.min(20,Math.round(5+Math.sqrt(pPts)*2.2)));
     rows.push(`<div class="pgroup" data-pid="${p.id}">
-      <div class="grow gsumrow" style="min-height:${ph+42}px"><div class="gtrack">
+      <div class="grow gsumrow"><div class="gtrack" style="height:${ph+34}px">
         <div class="gsumtrack" style="left:${gx(scs)}%;width:${spanW}%">
           <button class="gsumlbl" onpointerdown="projDown(event,${p.id})"
             data-full="${p.title} — ${ppc}% done · ${pPts} pts · ${open} open · due ${p.due?fmtD(p.due):"no date"} — click to manage, drag to reorder">
@@ -507,10 +507,10 @@ function placeOverflowTitles(){
       const right=parseFloat(bar.style.left||0)+parseFloat(bar.style.width||0);
       overflow(track,bar,ttl,right,off);
     });
-    const lbl=track.querySelector(":scope > .gsumlbl");
+    const sum=track.querySelector(":scope > .gsumtrack");
+    const lbl=sum?.querySelector(".gsumlbl")||track.querySelector(":scope > .gsumlbl");
     if(lbl){
       const ttl=lbl.querySelector(".gpin .ttl")||lbl.querySelector(".ttl"); if(!ttl) return;
-      const sum=track.querySelector(":scope > .gsumtrack");
       const right=sum
         ?((sum.offsetLeft+sum.offsetWidth)/Math.max(track.clientWidth,1)*100)
         :(parseFloat(lbl.style.left||0)+lbl.offsetWidth/Math.max(track.clientWidth,1)*100);

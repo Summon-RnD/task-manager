@@ -277,13 +277,14 @@
      instead of being centered and pushing the project name down away from the ribbon */
   .gsumrow{min-height:30px;align-items:flex-start;padding-top:2px}
   /* project header: title bubble on row 1, progress bar + % on row 2 — never stacked */
-  .gsumtrack{position:absolute;top:4px}
-  .gsumbar{position:absolute;left:0;right:0;top:30px;min-height:9px}
+  .gsumrow .gtrack{height:auto;overflow:visible}
+  .gsumtrack{position:absolute;top:4px;display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+  .gsumbar{position:relative;left:0;right:0;top:auto;width:100%;min-height:9px;flex-shrink:0}
   .gsumline{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);
            height:9px;border-radius:999px;background:#ccd4e2;pointer-events:none;z-index:0}
   .gsumfill{position:absolute;left:0;top:50%;transform:translateY(-50%);
            height:9px;border-radius:999px;background:#3b6ef6;pointer-events:none;z-index:1;min-width:0}
-  .gsumlbl{position:absolute;top:0;left:0;z-index:2;
+  .gsumlbl{position:relative;top:auto;left:0;z-index:2;flex-shrink:0;
            display:inline-flex;align-items:center;
            background:var(--surface);border:1px solid var(--line);border-radius:999px;
            padding:2px 9px 2px 2px;box-shadow:0 2px 8px rgba(20,24,35,.1);
