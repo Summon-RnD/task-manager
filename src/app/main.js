@@ -851,7 +851,7 @@ function openDetail(id){
   document.getElementById("dBody").innerHTML=`
     <div class="frow"><span class="lbl">Owner</span>${av(n.owner)}<select onchange="updTask(${id},'owner',this.value)">
       ${Object.entries(PEOPLE).map(([k,pp])=>`<option value="${k}" ${k===n.owner?'selected':''}>${pp.name}</option>`).join("")}</select></div>
-    <div class="frow"><span class="lbl">Due</span><input type="date" value="${n.due||""}" onchange="updTask(${id},'due',this.value)">${dueChip(n.due,leaf&&n.done)}</div>
+    <div class="frow"><span class="lbl">Due</span>${duePill(n.due,`updTask(${id},'due',this.value)`)}${dueChip(n.due,leaf&&n.done)}</div>
     ${sizeFld}
     ${leaf?`<div class="frow"><span class="lbl">Status</span>
       <button class="chip" style="${n.done?'background:var(--green-soft);color:var(--green)':'background:#eef0f4;color:var(--ink-2)'}"
@@ -869,7 +869,7 @@ function openDetail(id){
         <button class="t" style="text-align:left" onclick="openDetail(${ch.id})">${ch.title}</button>
         ${ownerPill(ch.owner,`updTask(${ch.id},'owner',this.value,true);openDetail(${id})`)}
         ${szCtl}
-        ${dueChip(ch.due,lleaf&&ch.done)}</div>`;}).join("")}
+        ${duePill(ch.due,`updTask(${ch.id},'due',this.value,true);openDetail(${id})`,true)}</div>`;}).join("")}
     ${path.length>=3?"":`<div class="subadd" style="margin-top:10px"><input id="dSubNew" placeholder="Add a ${path.length>1?"subtask":"task"}…"><button onclick="addChild(${id})">Add</button></div>`}
     <button class="danger" onclick="deleteTask(${id})">Delete ${path.length===1?"project":path.length>=3?"subtask":"task"}</button>`;
   document.getElementById("tmodal").classList.add("show");
@@ -1209,7 +1209,18 @@ const ownerOpts=v=>`<option value="">Owner…</option>`+Object.entries(PEOPLE).m
 function ownerPill(v,onch){ const col=v?PEOPLE[v].color:"#c2c8d2";
   return `<span class="opill" style="--oc:${col}"><span class="odot"></span>
     <select onchange="${onch}">${ownerOpts(v)}</select></span>`; }
-function duePill(v,onch,sm){ return `<span class="duepill ${sm?'sm':''}"><input type="date" value="${v||''}" onchange="${onch}"></span>`; }
+function duePill(v,onch,sm){
+  const lbl=v?fmtD(v):"Set date";
+  return `<label class="duepill ${sm?'sm':''}" onclick="pickDueEl(this)">`
+    +`<span class="duelbl${v?'':' empty'}">${lbl}</span>`
+    +`<input type="date" class="duepick" value="${v||''}" onchange="${onch}" tabindex="-1" aria-label="Due date"></label>`;
+}
+function pickDueEl(el){
+  const inp=el&&el.querySelector("input.duepick");
+  if(!inp) return;
+  if(typeof inp.showPicker==="function"){ try{ inp.showPicker(); return; }catch(_){ /* fall through */ } }
+  inp.focus(); inp.click();
+}
 function szSeg(v,onch){ return `<span class="szseg">${["s","m","l","xl"].map(z=>
   `<button class="szb ${v===z?'on':''}" onclick="${onch.replace('Z',"'"+z+"'")}">${SIZE_NAMES[z]}</button>`).join("")}</span>`; }
 function taskCardHTML(tk,i){ tk.subs=tk.subs||[];
@@ -1530,7 +1541,7 @@ const _globals = {
   toggleExp, updTask, refreshBarMenu, addChild, addProject, deleteTask, addCapTask, barDown, barContext, pickSearch,
   uploadPhoto, removePhoto, rvToggle, rvText, rvOwner, rvDue, rvSize, pushApproved, attachTranscript,
   doSearch, refreshCard, delCapTask, setTask, setTaskOwner, setTaskSize, setSub, setSubOwner, addSub,
-  delSub, commitCapture, toggleListen, stopListen, renderAll, moveTask, setKeyVal,
+  delSub, commitCapture, toggleListen, stopListen, renderAll, moveTask, setKeyVal, pickDueEl,
 };
 Object.assign(window, _globals);
 
